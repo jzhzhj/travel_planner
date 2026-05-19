@@ -56,7 +56,7 @@ def shutdown():
 class ChatRequest(BaseModel):
     session_id: str | None = None
     message: str
-    language: str = "zh"
+    language: str = "en"
     currency: str = "CAD"
 
 
@@ -308,7 +308,7 @@ def chat(req: ChatRequest):
 
 class RerenderRequest(BaseModel):
     session_id: str
-    language: str = "zh"
+    language: str = "en"
 
 
 @app.post("/api/rerender")
@@ -452,10 +452,8 @@ class SuggestRequest(BaseModel):
 
 @app.post("/api/suggest")
 def suggest_more(req: SuggestRequest):
-    """用 LLM 生成更多景点或餐厅推荐，返回名称列表。"""
-    from langchain_core.messages import SystemMessage as SysMsg
-
-    from graph import get_llm
+    """推荐更多景点或餐厅 — 优先用 Google Places，无 API key 时 fallback 到 LLM。"""
+    from tools.places import search_places
 
     state = _sessions.get(req.session_id)
     if not state or not state.get("plan_data"):
@@ -471,9 +469,69 @@ def suggest_more(req: SuggestRequest):
         for act in day.activities:
             existing.add(act.place_name)
 
+    # ── 优先: Google Places API ──
+    suggestions = _suggest_via_places(destination, req.category, existing, lang)
+
+    # ── Fallback: LLM ──
+    if not suggestions:
+        suggestions = _suggest_via_llm(destination, req.category, existing, lang)
+
+    return {"suggestions": suggestions}
+
+
+def _suggest_via_places(
+    destination: str, category: str, existing: set[str], lang: str,
+) -> list[dict]:
+    """用 Google Places Text Search 获取真实推荐。"""
+    from tools.places import search_places
+
+    lang_code = "zh" if lang == "zh" else "en"
+    if category == "restaurants":
+        query = (f"{destination} 当地特色餐厅" if lang == "zh"
+                 else f"best local restaurants in {destination}")
+    else:
+        query = (f"{destination} 热门景点 旅游" if lang == "zh"
+                 else f"top attractions in {destination}")
+
+    try:
+        pois = search_places(query, max_results=10, language=lang_code)
+    except Exception as e:
+        print(f"[suggest] Places API error: {e}")
+        return []
+
+    if not pois:
+        return []
+
+    # 过滤已有的，取前 3 个
+    results = []
+    existing_lower = {n.lower() for n in existing}
+    for p in pois:
+        if p.display_name.lower() in existing_lower:
+            continue
+        rating_info = f" ({p.rating}/5)" if p.rating else ""
+        desc = p.editorial_summary or p.address or ""
+        results.append({
+            "name": p.display_name,
+            "desc": f"{desc}{rating_info}",
+            "lat": p.lat or 0,
+            "lng": p.lng or 0,
+        })
+        if len(results) >= 3:
+            break
+
+    return results
+
+
+def _suggest_via_llm(
+    destination: str, category: str, existing: set[str], lang: str,
+) -> list[dict]:
+    """LLM fallback — 当 Google Places 不可用时使用。"""
+    from langchain_core.messages import SystemMessage as SysMsg
+    from graph import get_llm
+
     existing_str = "、".join(existing) if existing else "无"
 
-    if req.category == "restaurants":
+    if category == "restaurants":
         if lang == "zh":
             prompt = (
                 f"请为去{destination}旅行的游客推荐 3 家当地特色餐厅。\n"
@@ -512,23 +570,18 @@ def suggest_more(req: SuggestRequest):
         llm = get_llm()
         resp = llm.invoke([SysMsg(content=prompt)])
         text = resp.content.strip()
-        # 提取 JSON 数组
         start = text.find("[")
         end = text.rfind("]")
         if start != -1 and end != -1:
-            suggestions = json.loads(text[start : end + 1])
-        else:
-            suggestions = []
+            return json.loads(text[start : end + 1])
     except Exception as e:
-        print(f"[suggest] error: {e}")
-        suggestions = []
-
-    return {"suggestions": suggestions}
+        print(f"[suggest] LLM error: {e}")
+    return []
 
 
 class SurveySubmitRequest(BaseModel):
     session_id: str
-    language: str = "zh"
+    language: str = "en"
     currency: str = "CAD"
     # 必填字段（问卷可能需要用户填写）
     destination: str = ""

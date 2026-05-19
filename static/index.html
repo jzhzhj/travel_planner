@@ -6,26 +6,26 @@
 <title>Wander — Travel, crafted for you</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:            #F6F2EC;
-    --bg-card:       #FFFFFF;
-    --surface:       #FBF8F2;
-    --primary:       #2A182E;
-    --primary-soft:  #3D2942;
-    --primary-ink:   #1F1419;
-    --accent:        #C85A3C;
-    --accent-soft:   #E8725C;
-    --text:          #1F1419;
-    --text-dim:      #7A6F6A;
-    --text-muted:    #A69E98;
-    --border:        #E5DFD4;
-    --border-soft:   #EFEBE2;
-    --shadow-card:   0 1px 2px rgba(42, 24, 46, 0.04), 0 8px 32px rgba(42, 24, 46, 0.05);
-    --shadow-lg:     0 20px 80px rgba(42, 24, 46, 0.14);
-    --font-serif:    'Fraunces', 'Cormorant Garamond', Georgia, serif;
-    --font-sans:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --bg:          #F8F6F1;
+    --bg-card:     #FFFFFF;
+    --surface:     #F2F0EB;
+    --ink:         #0C0C0E;
+    --stone:       #8C8478;
+    --stone-soft:  rgba(140,132,120,0.07);
+    --stone-border:rgba(140,132,120,0.12);
+    --text:        #0C0C0E;
+    --text-dim:    #6A6460;
+    --text-muted:  #B0A898;
+    --border:      rgba(0,0,0,0.05);
+    --border-hover:rgba(0,0,0,0.12);
+    --shadow-soft: 0 1px 4px rgba(0,0,0,0.03), 0 8px 24px rgba(0,0,0,0.03);
+    --shadow-lg:   0 20px 60px rgba(0,0,0,0.1);
+    --font-serif:  'DM Serif Display', Georgia, serif;
+    --font-sans:   'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    --ease:        cubic-bezier(0.32,0.72,0,1);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -40,134 +40,154 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
-  body { display: flex; flex-direction: column; }
+  body { display: flex; flex-direction: column; overflow: hidden; }
 
-  /* ── Header ───────────────────────────────────── */
+  /* Paper grain */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+    opacity: 0.45;
+  }
+
+  /* ── Nav (split minimal) ── */
   .header {
-    background: var(--bg-card);
-    padding: 22px 44px;
+    position: relative; z-index: 10;
     display: flex;
     align-items: center;
-    gap: 16px;
-    border-bottom: 1px solid var(--border-soft);
+    justify-content: space-between;
+    padding: 20px 48px;
     flex-shrink: 0;
-    z-index: 10;
   }
   .logo {
     font-family: var(--font-serif);
-    font-size: 1.7rem;
-    font-weight: 400;
+    font-size: 1.35rem;
+    color: var(--ink);
     font-style: italic;
     letter-spacing: -0.02em;
-    color: var(--primary);
     line-height: 1;
   }
-  .logo-dot {
-    display: inline-block;
-    width: 6px;
-    height: 6px;
-    background: var(--accent);
-    border-radius: 50%;
-    margin-left: 4px;
-    vertical-align: middle;
-  }
+  .logo-dot { color: var(--stone); font-style: normal; }
   .header-right {
-    margin-left: auto;
     display: flex;
     align-items: center;
-    gap: 24px;
+    gap: 6px;
   }
   .setting-group select {
-    padding: 7px 28px 7px 12px;
+    padding: 6px 16px;
     border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--bg-card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237A6F6A' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;
-    color: var(--text);
+    border-radius: 100px;
+    background: transparent;
+    color: var(--stone);
     font-family: var(--font-sans);
-    font-size: 0.82rem;
+    font-size: 0.72rem;
     font-weight: 500;
+    letter-spacing: 0.05em;
     cursor: pointer;
     outline: none;
     appearance: none;
     -webkit-appearance: none;
-    transition: border-color 0.15s;
+    transition: all 400ms var(--ease);
   }
-  .setting-group select:hover { border-color: var(--primary); }
+  .setting-group select:hover { border-color: var(--border-hover); color: var(--ink); }
 
-  /* ── Main Layout ──────────────────────────────── */
+  /* ── Main Layout ── */
   .main {
     flex: 1;
     display: flex;
     overflow: hidden;
+    padding: 0 48px 40px;
+    gap: 0;
+    transition: all 800ms var(--ease);
   }
 
-  /* ── Chat Panel ───────────────────────────────── */
+  /* ── Chat Panel (centered column, shifts left on plan) ── */
   .chat-panel {
-    width: 540px;
-    min-width: 440px;
+    flex: 1;
+    max-width: 660px;
+    margin: 0 auto;
     display: flex;
     flex-direction: column;
-    background: var(--bg-card);
-    border-right: 1px solid var(--border-soft);
+    transition: all 800ms var(--ease);
+  }
+  .main.has-plan .chat-panel {
+    max-width: 440px;
+    margin: 0;
   }
 
   .messages {
     flex: 1;
     overflow-y: auto;
-    padding: 44px 40px 20px;
+    padding: 0 0 16px;
     display: flex;
     flex-direction: column;
     gap: 18px;
   }
-  .messages::-webkit-scrollbar { width: 4px; }
-  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .messages::-webkit-scrollbar { width: 2px; }
+  .messages::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.06); border-radius: 2px; }
   .messages::-webkit-scrollbar-track { background: transparent; }
 
   /* Empty / welcome state */
-  .empty-state {
-    padding: 8px 0 12px;
-  }
+  .empty-state { padding: 8px 0 20px; }
   .empty-state h1 {
     font-family: var(--font-serif);
-    font-size: 2.1rem;
-    font-weight: 300;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    color: var(--primary);
-    margin-bottom: 14px;
+    font-size: clamp(2rem, 3.8vw, 3.2rem);
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.06;
+    letter-spacing: -0.04em;
+    color: var(--ink);
+    margin-bottom: 16px;
   }
   .empty-state h1 em {
     font-style: italic;
-    font-weight: 400;
   }
   .empty-state p {
     color: var(--text-dim);
-    font-size: 0.97rem;
-    line-height: 1.55;
-    max-width: 380px;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    font-weight: 300;
+    max-width: 460px;
   }
 
   /* Messages */
   .msg {
-    max-width: 88%;
-    padding: 13px 18px;
-    line-height: 1.55;
-    font-size: 0.93rem;
+    max-width: 84%;
+    padding: 13px 20px;
+    line-height: 1.6;
+    font-size: 0.9rem;
+    font-weight: 300;
     white-space: pre-wrap;
     word-break: break-word;
+    animation: fadeUp 500ms var(--ease) both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
   .msg.user {
     align-self: flex-end;
-    background: var(--primary);
-    color: #F6F2EC;
-    border-radius: 18px 18px 4px 18px;
+    background: var(--ink);
+    color: #F8F6F1;
+    border-radius: 20px 20px 4px 20px;
   }
+  /* AI msg: double-bezel shell */
   .msg.assistant {
     align-self: flex-start;
-    background: var(--surface);
-    color: var(--text);
-    border-radius: 18px 18px 18px 4px;
-    border: 1px solid var(--border-soft);
+    background: rgba(0,0,0,0.02);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 3px;
+  }
+  .msg.assistant .bubble {
+    background: var(--bg-card);
+    border-radius: 19px;
+    padding: 13px 20px;
+    color: #3A3632;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.7), 0 1px 4px rgba(0,0,0,0.03);
+    line-height: 1.6;
+    font-size: 0.9rem;
+    font-weight: 300;
   }
   .msg.system {
     align-self: center;
@@ -182,17 +202,17 @@
   /* Typing indicator */
   .typing {
     align-self: flex-start;
-    padding: 14px 18px;
-    background: var(--surface);
-    border-radius: 18px 18px 18px 4px;
-    border: 1px solid var(--border-soft);
+    padding: 14px 20px;
+    background: rgba(0,0,0,0.02);
+    border: 1px solid var(--border);
+    border-radius: 22px;
     display: none;
-    margin: 0 40px;
+    margin-bottom: 8px;
   }
   .typing.active { display: inline-flex; gap: 5px; align-items: center; }
   .typing span {
-    width: 6px; height: 6px;
-    background: var(--primary);
+    width: 5px; height: 5px;
+    background: var(--stone);
     border-radius: 50%;
     animation: bounce 1.4s infinite;
     opacity: 0.35;
@@ -209,173 +229,200 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-top: 12px;
-    padding: 8px 16px;
+    margin-top: 10px;
+    padding: 8px 18px;
     background: transparent;
-    color: var(--accent);
-    border: 1px solid var(--accent);
+    color: var(--ink);
+    border: 1px solid var(--border);
     border-radius: 100px;
     cursor: pointer;
     font-family: var(--font-sans);
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     font-weight: 500;
-    transition: all 0.15s;
+    transition: all 400ms var(--ease);
   }
   .view-plan-btn:hover {
-    background: var(--accent);
-    color: white;
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
   }
 
-  /* ── Quick starts ─────────────────────────────── */
+  /* ── Quick starts (horizontal pills) ── */
   .quick-starts {
-    padding: 0 40px 20px;
+    padding: 0 0 20px;
   }
   .quick-label {
-    font-family: var(--font-serif);
-    font-size: 0.72rem;
-    color: var(--text-muted);
+    font-size: 0.6rem;
     text-transform: uppercase;
-    letter-spacing: 0.18em;
-    margin-bottom: 12px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
     font-weight: 500;
-    font-style: italic;
+    margin-bottom: 10px;
   }
   .quick-btn {
-    display: block;
-    width: 100%;
-    padding: 16px 48px 16px 20px;
-    background: var(--surface);
-    border: 1px solid var(--border-soft);
-    border-radius: 14px;
+    display: inline-block;
+    padding: 11px 20px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 100px;
     font-family: var(--font-sans);
-    font-size: 0.88rem;
-    color: var(--text);
+    font-size: 0.82rem;
+    font-weight: 400;
+    color: var(--stone);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 500ms var(--ease);
     text-align: left;
-    line-height: 1.55;
-    position: relative;
-  }
-  .quick-btn::after {
-    content: '';
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    width: 16px;
-    height: 1px;
-    background: var(--accent);
-    transform: translateY(-50%) scaleX(0.6);
-    transform-origin: right;
-    transition: transform 0.25s ease;
+    line-height: 1.5;
+    margin-right: 6px;
+    margin-bottom: 6px;
   }
   .quick-btn:hover {
-    background: var(--bg-card);
-    border-color: var(--primary);
-  }
-  .quick-btn:hover::after {
-    transform: translateY(-50%) scaleX(1);
+    border-color: var(--border-hover);
+    color: var(--ink);
+    background: rgba(0,0,0,0.02);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.04);
   }
 
-  /* ── Input Area ───────────────────────────────── */
+  /* ── Input Area ── */
   .input-area {
-    padding: 20px 40px 32px;
-    border-top: 1px solid var(--border-soft);
+    padding: 16px 0 0;
+    margin-top: auto;
+  }
+  .input-bar {
     display: flex;
-    gap: 10px;
-    background: var(--bg-card);
     align-items: center;
-  }
-  .input-wrapper {
-    flex: 1;
-    position: relative;
-  }
-  .input-area input {
-    width: 100%;
-    padding: 15px 20px;
+    background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 20px;
+    padding: 5px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    transition: all 500ms var(--ease);
+  }
+  .input-bar:focus-within {
+    border-color: var(--border-hover);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.06);
+  }
+  .input-bar input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 13px 20px;
     font-family: var(--font-sans);
     font-size: 0.95rem;
-    background: var(--bg-card);
     color: var(--text);
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    font-weight: 300;
   }
-  .input-area input:focus {
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(42, 24, 46, 0.07);
-  }
-  .input-area input::placeholder {
+  .input-bar input::placeholder {
     color: var(--text-muted);
     font-style: italic;
   }
 
   .send-btn {
-    width: 48px;
-    height: 48px;
+    width: 46px;
+    height: 46px;
     border: none;
-    border-radius: 12px;
-    background: var(--primary);
-    color: #F6F2EC;
+    border-radius: 14px;
+    background: var(--ink);
+    color: var(--bg);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s;
+    transition: all 400ms var(--ease);
     flex-shrink: 0;
   }
   .send-btn:hover:not(:disabled) {
-    background: var(--primary-soft);
-    transform: translateY(-1px);
+    transform: scale(1.06);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
   }
-  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .send-btn:active:not(:disabled) { transform: scale(0.97); }
+  .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-  /* ── Preview Panel ─────────────────────────────── */
+  /* ── Preview Panel (slides in from right) ── */
   .preview-panel {
-    flex: 1;
+    flex: 0;
+    width: 0;
+    overflow: hidden;
+    opacity: 0;
+    margin-left: 0;
     display: flex;
     flex-direction: column;
-    background: var(--bg);
-    position: relative;
+    transition: all 800ms var(--ease);
+  }
+  .main.has-plan .preview-panel {
+    flex: 1;
+    width: auto;
+    opacity: 1;
+    margin-left: 32px;
   }
 
-  .preview-placeholder {
+  .preview-outer {
     flex: 1;
+    background: rgba(0,0,0,0.02);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+    padding: 4px;
+    display: flex;
+    flex-direction: column;
+  }
+  .preview-inner {
+    flex: 1;
+    background: var(--bg-card);
+    border-radius: calc(1.5rem - 4px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 60px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 4px rgba(0,0,0,0.02);
+  }
+  .preview-inner::before {
+    content: '';
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(140,132,120,0.04) 0%, transparent 65%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .preview-placeholder {
     text-align: center;
+    padding: 60px;
   }
   .preview-placeholder .illustration {
-    width: 140px;
-    height: 140px;
-    margin-bottom: 36px;
-    opacity: 0.35;
+    width: 120px; height: 120px;
+    margin-bottom: 32px;
+    opacity: 0.15;
   }
   .preview-placeholder h2 {
     font-family: var(--font-serif);
-    font-size: 1.75rem;
-    font-weight: 300;
-    color: var(--primary);
-    margin-bottom: 14px;
+    font-size: 1.45rem;
+    font-weight: 400;
     font-style: italic;
-    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
   }
   .preview-placeholder p {
     color: var(--text-dim);
-    font-size: 0.92rem;
-    line-height: 1.65;
-    max-width: 360px;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    max-width: 300px;
+    font-weight: 300;
+    margin: 0 auto;
   }
 
-  /* ── Progress ──────────────────────────────────── */
+  /* ── Progress ── */
   .progress-overlay {
     display: none;
     position: absolute;
     inset: 0;
-    background: var(--bg);
+    background: var(--bg-card);
     z-index: 10;
     align-items: center;
     justify-content: center;
@@ -384,49 +431,42 @@
     transition: opacity 0.25s ease;
   }
   .progress-overlay.active { display: flex; opacity: 1; }
-  .progress-content {
-    text-align: center;
-    max-width: 440px;
-  }
+  .progress-content { text-align: center; max-width: 440px; }
   .progress-loader {
-    width: 56px;
-    height: 56px;
-    margin: 0 auto 36px;
+    width: 52px; height: 52px;
+    margin: 0 auto 32px;
     position: relative;
   }
   .progress-loader::before {
     content: '';
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     border-radius: 50%;
-    border: 1.5px solid var(--border);
+    border: 1px solid var(--border);
   }
   .progress-loader::after {
     content: '';
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     border-radius: 50%;
-    border: 1.5px solid transparent;
-    border-top-color: var(--primary);
-    border-right-color: var(--primary);
+    border: 1px solid transparent;
+    border-top-color: var(--ink);
+    border-right-color: var(--ink);
     animation: spin 1.4s cubic-bezier(0.5, 0, 0.5, 1) infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-
   .progress-status {
     font-family: var(--font-serif);
-    font-size: 1.45rem;
+    font-size: 1.35rem;
     font-weight: 400;
     font-style: italic;
-    color: var(--primary);
-    margin-bottom: 10px;
+    color: var(--ink);
+    margin-bottom: 8px;
     line-height: 1.3;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
   }
   .progress-sub {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: var(--text-muted);
-    margin-bottom: 36px;
+    margin-bottom: 32px;
     font-style: italic;
     font-family: var(--font-serif);
   }
@@ -435,18 +475,18 @@
     background: var(--border);
     border-radius: 2px;
     overflow: hidden;
-    margin: 0 auto 12px;
-    width: 300px;
+    margin: 0 auto 10px;
+    width: 260px;
   }
   .progress-fill {
     height: 100%;
     width: 0%;
-    background: var(--primary);
+    background: var(--ink);
     border-radius: 2px;
-    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: width 0.6s var(--ease);
   }
   .progress-pct {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     color: var(--text-muted);
     font-weight: 500;
     letter-spacing: 0.12em;
@@ -459,166 +499,141 @@
     width: 100%;
     display: none;
     background: white;
+    border-radius: calc(1.5rem - 4px);
   }
 
-  /* ── Survey ────────────────────────────────────── */
+  /* ── Survey ── */
   .survey-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    background: rgba(31, 20, 25, 0.5);
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(12, 12, 14, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     padding: 20px;
   }
   .survey-overlay.hidden { display: none; }
   .survey-card {
     background: var(--bg-card);
     border-radius: 24px;
-    padding: 52px 56px 44px;
-    max-width: 620px;
+    padding: 48px 52px 40px;
+    max-width: 600px;
     width: 100%;
     max-height: 92vh;
     overflow-y: auto;
     box-shadow: var(--shadow-lg);
     position: relative;
   }
-  .survey-card::-webkit-scrollbar { width: 4px; }
-  .survey-card::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  .survey-header {
-    margin-bottom: 40px;
-  }
+  .survey-card::-webkit-scrollbar { width: 3px; }
+  .survey-card::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.06); border-radius: 2px; }
+  .survey-header { margin-bottom: 36px; }
   .survey-card .eyebrow {
     font-family: var(--font-serif);
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.2em;
-    color: var(--accent);
+    color: var(--stone);
     font-style: italic;
     margin-bottom: 12px;
-    font-weight: 500;
+    font-weight: 400;
   }
   .survey-card h2 {
     font-family: var(--font-serif);
-    font-size: 2.3rem;
-    font-weight: 300;
-    color: var(--primary);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    margin-bottom: 14px;
-  }
-  .survey-card h2 em {
-    font-style: italic;
+    font-size: 2.1rem;
     font-weight: 400;
+    font-style: italic;
+    color: var(--ink);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    margin-bottom: 12px;
   }
+  .survey-card h2 em { font-style: italic; }
   .survey-sub {
     color: var(--text-dim);
-    font-size: 0.96rem;
-    line-height: 1.6;
-    max-width: 480px;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    font-weight: 300;
+    max-width: 460px;
   }
-
-  .survey-section {
-    margin-bottom: 32px;
-  }
+  .survey-section { margin-bottom: 28px; }
   .survey-section label {
     display: block;
     font-family: var(--font-sans);
     font-weight: 500;
-    font-size: 0.75rem;
-    color: var(--primary);
-    margin-bottom: 14px;
+    font-size: 0.7rem;
+    color: var(--stone);
+    margin-bottom: 12px;
     text-transform: uppercase;
     letter-spacing: 0.14em;
   }
-  .survey-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+  .survey-options { display: flex; flex-wrap: wrap; gap: 8px; }
   .survey-chip {
-    padding: 11px 20px;
+    padding: 10px 20px;
     border: 1px solid var(--border);
     border-radius: 100px;
     font-family: var(--font-sans);
-    font-size: 0.88rem;
-    font-weight: 500;
+    font-size: 0.86rem;
+    font-weight: 400;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 300ms var(--ease);
     user-select: none;
-    color: var(--text);
-    background: var(--bg-card);
+    color: var(--text-dim);
+    background: transparent;
     display: inline-flex;
     align-items: center;
     gap: 8px;
   }
   .survey-chip:hover {
-    border-color: var(--primary);
-    background: var(--surface);
+    border-color: var(--border-hover);
+    color: var(--ink);
   }
   .survey-chip.selected {
-    border-color: var(--primary);
-    background: var(--primary);
-    color: #F6F2EC;
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--bg);
   }
-  .survey-chip .chip-icon {
-    font-size: 1.02rem;
-    line-height: 1;
-  }
-
+  .survey-chip .chip-icon { font-size: 1rem; line-height: 1; }
   .survey-input {
     width: 100%;
-    padding: 13px 16px;
+    padding: 12px 16px;
     border: 1px solid var(--border);
-    border-radius: 10px;
+    border-radius: 12px;
     font-family: var(--font-sans);
-    font-size: 0.92rem;
+    font-size: 0.9rem;
     color: var(--text);
-    background: var(--bg-card);
+    background: transparent;
     outline: none;
-    transition: border-color 0.15s;
+    transition: border-color 300ms var(--ease);
+    font-weight: 300;
   }
-  .survey-input:focus {
-    border-color: var(--primary);
-  }
-  .survey-input::placeholder {
-    color: var(--text-muted);
-  }
-  .survey-row {
-    display: flex;
-    gap: 12px;
-  }
-  .survey-row .survey-field {
-    flex: 1;
-  }
+  .survey-input:focus { border-color: var(--border-hover); }
+  .survey-input::placeholder { color: var(--text-muted); }
+  .survey-row { display: flex; gap: 12px; }
+  .survey-row .survey-field { flex: 1; }
   .survey-field label {
     display: block;
     font-family: var(--font-sans);
     font-weight: 500;
-    font-size: 0.75rem;
-    color: var(--primary);
+    font-size: 0.7rem;
+    color: var(--stone);
     margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 0.14em;
   }
-
   .survey-submit {
     width: 100%;
-    padding: 17px;
+    padding: 16px;
     border: none;
-    border-radius: 12px;
-    margin-top: 16px;
-    background: var(--primary);
-    color: #F6F2EC;
+    border-radius: 14px;
+    margin-top: 12px;
+    background: var(--ink);
+    color: var(--bg);
     font-family: var(--font-sans);
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 400ms var(--ease);
     letter-spacing: 0.02em;
     display: inline-flex;
     align-items: center;
@@ -626,49 +641,44 @@
     gap: 10px;
   }
   .survey-submit:hover {
-    background: var(--primary-soft);
     transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
   }
-  .survey-submit svg {
-    transition: transform 0.2s;
-  }
-  .survey-submit:hover svg {
-    transform: translateX(3px);
-  }
+  .survey-submit svg { transition: transform 300ms var(--ease); }
+  .survey-submit:hover svg { transform: translateX(3px); }
 
-  /* ── Mobile ────────────────────────────────────── */
+  /* ── Mobile ── */
   @media (max-width: 960px) {
-    .header { padding: 18px 24px; }
-    .logo { font-size: 1.4rem; }
-    .header-right { gap: 14px; }
-    .main { flex-direction: column; }
+    .header { padding: 16px 24px; }
+    .logo { font-size: 1.15rem; }
+    .main { flex-direction: column; padding: 0 24px 24px; }
     .chat-panel {
-      width: 100%;
-      min-width: 0;
-      border-right: none;
-      border-bottom: 1px solid var(--border-soft);
+      max-width: 100% !important;
+      margin: 0 !important;
       flex: 1;
     }
-    .messages { padding: 32px 24px 16px; }
-    .quick-starts { padding: 0 24px 16px; }
-    .input-area { padding: 18px 24px 24px; }
-    .typing { margin: 0 24px; }
-    .preview-panel { flex: 1; min-height: 320px; }
-    .survey-card { padding: 36px 28px 28px; border-radius: 20px; }
-    .survey-card h2 { font-size: 1.8rem; }
-    .empty-state h1 { font-size: 1.7rem; }
-    .progress-status { font-size: 1.2rem; }
+    .main.has-plan .preview-panel {
+      margin-left: 0;
+      margin-top: 16px;
+      flex: 1;
+      min-height: 320px;
+    }
+    .messages { padding: 0 0 12px; }
+    .empty-state h1 { font-size: 1.8rem; }
+    .survey-card { padding: 32px 24px 24px; border-radius: 20px; }
+    .survey-card h2 { font-size: 1.7rem; }
+    .progress-status { font-size: 1.15rem; }
   }
 
   @media (max-width: 520px) {
     .header { padding: 14px 18px; }
-    .setting-group select { padding: 6px 24px 6px 10px; font-size: 0.78rem; }
+    .setting-group select { padding: 5px 12px; font-size: 0.68rem; }
   }
 </style>
 </head>
 <body>
 
-<!-- ─── Survey Overlay ───────────────────────────── -->
+<!-- Survey Overlay -->
 <div class="survey-overlay hidden" id="surveyOverlay">
   <div class="survey-card">
     <div class="survey-header">
@@ -676,7 +686,6 @@
       <h2 id="surveyTitle"></h2>
       <div class="survey-sub" id="surveySub"></div>
     </div>
-
     <div class="survey-section" data-field="required_fields" id="sectionRequired" style="display:none;">
       <div class="survey-row">
         <div class="survey-field" id="fieldDest" style="display:none;">
@@ -689,22 +698,18 @@
         </div>
       </div>
     </div>
-
     <div class="survey-section" data-field="travel_style">
       <label id="labelStyle"></label>
       <div class="survey-options" id="optStyle"></div>
     </div>
-
     <div class="survey-section" data-field="budget_tier">
       <label id="labelBudget"></label>
       <div class="survey-options" id="optBudget"></div>
     </div>
-
     <div class="survey-section" data-field="interests">
       <label id="labelInterest"></label>
       <div class="survey-options" id="optInterest"></div>
     </div>
-
     <button class="survey-submit" id="surveySubmit" onclick="submitSurvey()">
       <span id="surveySubmitText"></span>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -712,9 +717,9 @@
   </div>
 </div>
 
-<!-- ─── Header ───────────────────────────────────── -->
+<!-- Nav -->
 <div class="header">
-  <div class="logo"><span id="logo">Wander</span><span class="logo-dot"></span></div>
+  <div class="logo"><span id="logo">Wander</span><span class="logo-dot">.</span></div>
   <div class="header-right">
     <div class="setting-group">
       <select id="langSelect" onchange="switchLang(this.value)">
@@ -731,9 +736,9 @@
   </div>
 </div>
 
-<!-- ─── Main ─────────────────────────────────────── -->
-<div class="main">
-  <!-- Chat Panel -->
+<!-- Main -->
+<div class="main" id="mainLayout">
+  <!-- Chat -->
   <div class="chat-panel">
     <div class="messages" id="messages">
       <div class="empty-state" id="emptyState">
@@ -746,40 +751,44 @@
     </div>
     <div class="quick-starts" id="quickStarts"></div>
     <div class="input-area">
-      <div class="input-wrapper">
+      <div class="input-bar">
         <input type="text" id="input" placeholder="" autocomplete="off">
+        <button class="send-btn" id="sendBtn" onclick="send()" aria-label="Send">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        </button>
       </div>
-      <button class="send-btn" id="sendBtn" onclick="send()" aria-label="Send">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
-      </button>
     </div>
   </div>
 
-  <!-- Preview Panel -->
+  <!-- Preview -->
   <div class="preview-panel">
-    <div class="preview-placeholder" id="placeholder">
-      <svg class="illustration" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="70" cy="70" r="58" stroke="#2A182E" stroke-width="1"/>
-        <ellipse cx="70" cy="70" rx="58" ry="22" stroke="#2A182E" stroke-width="1"/>
-        <ellipse cx="70" cy="70" rx="58" ry="44" stroke="#2A182E" stroke-width="1"/>
-        <ellipse cx="70" cy="70" rx="28" ry="58" stroke="#2A182E" stroke-width="1"/>
-        <line x1="12" y1="70" x2="128" y2="70" stroke="#2A182E" stroke-width="1"/>
-        <line x1="70" y1="12" x2="70" y2="128" stroke="#2A182E" stroke-width="1"/>
-        <circle cx="92" cy="48" r="2.5" fill="#C85A3C"/>
-      </svg>
-      <h2 id="previewTitle"></h2>
-      <p id="previewHint"></p>
-    </div>
-    <div class="progress-overlay" id="progressOverlay">
-      <div class="progress-content">
-        <div class="progress-loader"></div>
-        <div class="progress-status" id="progressStatus"></div>
-        <div class="progress-sub" id="progressSub"></div>
-        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="progress-pct" id="progressPct">0%</div>
+    <div class="preview-outer">
+      <div class="preview-inner">
+        <div class="preview-placeholder" id="placeholder">
+          <svg class="illustration" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="70" cy="70" r="58" stroke="#0C0C0E" stroke-width="0.8"/>
+            <ellipse cx="70" cy="70" rx="58" ry="22" stroke="#0C0C0E" stroke-width="0.8"/>
+            <ellipse cx="70" cy="70" rx="58" ry="44" stroke="#0C0C0E" stroke-width="0.8"/>
+            <ellipse cx="70" cy="70" rx="28" ry="58" stroke="#0C0C0E" stroke-width="0.8"/>
+            <line x1="12" y1="70" x2="128" y2="70" stroke="#0C0C0E" stroke-width="0.8"/>
+            <line x1="70" y1="12" x2="70" y2="128" stroke="#0C0C0E" stroke-width="0.8"/>
+            <circle cx="92" cy="48" r="2" fill="#8C8478"/>
+          </svg>
+          <h2 id="previewTitle"></h2>
+          <p id="previewHint"></p>
+        </div>
+        <div class="progress-overlay" id="progressOverlay">
+          <div class="progress-content">
+            <div class="progress-loader"></div>
+            <div class="progress-status" id="progressStatus"></div>
+            <div class="progress-sub" id="progressSub"></div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="progress-pct" id="progressPct">0%</div>
+          </div>
+        </div>
+        <iframe id="planFrame" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"></iframe>
       </div>
     </div>
-    <iframe id="planFrame" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"></iframe>
   </div>
 </div>
 
@@ -828,7 +837,6 @@
   };
 
   let surveyProfile = { travel_style: '', budget_tier: '', interests: [] };
-  // LLM 提取的画像（由 show_survey SSE 事件填充）
   let _surveyExtracted = {};
   let _surveyMissing = [];
 
@@ -876,22 +884,13 @@
   }
 
   async function submitSurvey() {
-    // 收集必填字段
     const dest = document.getElementById('inputDest').value.trim() || (_surveyExtracted.destination || '');
     const daysVal = document.getElementById('inputDays').value.trim();
     const days = daysVal ? parseInt(daysVal, 10) : (_surveyExtracted.duration_days || null);
 
-    // 验证必填
-    if (!dest) {
-      document.getElementById('inputDest').focus();
-      return;
-    }
-    if (!days) {
-      document.getElementById('inputDays').focus();
-      return;
-    }
+    if (!dest) { document.getElementById('inputDest').focus(); return; }
+    if (!days) { document.getElementById('inputDays').focus(); return; }
 
-    // 画像字段默认值
     if (!surveyProfile.travel_style) surveyProfile.travel_style = _surveyExtracted.travel_style || 'friends';
     if (!surveyProfile.budget_tier) surveyProfile.budget_tier = _surveyExtracted.budget_tier || 'comfort';
     if (!surveyProfile.interests.length) {
@@ -900,11 +899,9 @@
     }
 
     document.getElementById('surveyOverlay').classList.add('hidden');
-
     const t = I18N[currentLang];
     const currency = document.getElementById('currencySelect').value;
 
-    // 显示进度
     quickStarts.style.display = 'none';
     showProgress(10, t.thinking);
     typingEl.classList.add('active');
@@ -916,11 +913,8 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          session_id: sessionId,
-          language: currentLang,
-          currency: currency,
-          destination: dest,
-          duration_days: days,
+          session_id: sessionId, language: currentLang, currency: currency,
+          destination: dest, duration_days: days,
           travel_style: surveyProfile.travel_style,
           budget_tier: surveyProfile.budget_tier,
           interests: surveyProfile.interests,
@@ -935,29 +929,23 @@
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop();
-
         for (const line of lines) {
           if (line.startsWith('event: ')) {
             eventType = line.slice(7).trim();
           } else if (line.startsWith('data: ') && eventType) {
             try {
               const data = JSON.parse(line.slice(6));
-              if (eventType === 'progress') {
-                showProgress(data.pct, data.status);
-              } else if (eventType === 'plan_partial') {
-                handlePlanPartial(data.plan || {});
-              } else if (eventType === 'done') {
+              if (eventType === 'progress') showProgress(data.pct, data.status);
+              else if (eventType === 'plan_partial') handlePlanPartial(data.plan || {});
+              else if (eventType === 'done') {
                 sessionId = data.session_id;
                 typingEl.classList.remove('active');
                 hideProgress();
                 addMessage('assistant', data.reply);
-                if (data.plan_html) {
-                  showPlan(data.plan_html);
-                }
+                if (data.plan_html) showPlan(data.plan_html);
               }
             } catch (e) {}
             eventType = '';
@@ -978,11 +966,8 @@
     const s = SURVEY[currentLang];
     _surveyExtracted = extracted || {};
     _surveyMissing = missing || [];
-
-    // 重置 surveyProfile
     surveyProfile = { travel_style: '', budget_tier: '', pace: '', interests: [] };
 
-    // 判断是否只差少量画像字段
     const hasRequired = missing.indexOf('destination') < 0 && missing.indexOf('duration_days') < 0;
     const profileMissing = missing.filter(function(f) { return f !== 'destination' && f !== 'duration_days'; });
 
@@ -996,47 +981,31 @@
       document.getElementById('surveySub').textContent = s.sub;
     }
 
-    // 必填字段区域
     const needDest = missing.indexOf('destination') >= 0;
     const needDays = missing.indexOf('duration_days') >= 0;
     document.getElementById('sectionRequired').style.display = (needDest || needDays) ? '' : 'none';
     document.getElementById('fieldDest').style.display = needDest ? '' : 'none';
     document.getElementById('fieldDays').style.display = needDays ? '' : 'none';
-    // 清空输入
     document.getElementById('inputDest').value = '';
     document.getElementById('inputDays').value = '';
 
-    // 画像 chip section — 只展示缺失的
     document.querySelectorAll('.survey-section[data-field]').forEach(function(el) {
       const field = el.getAttribute('data-field');
-      if (field === 'required_fields') return; // 上面已处理
+      if (field === 'required_fields') return;
       el.style.display = missing.indexOf(field) >= 0 ? '' : 'none';
     });
 
-    // Pre-select extracted values as chip selections
     if (extracted.travel_style && missing.indexOf('travel_style') >= 0) {
       surveyProfile.travel_style = extracted.travel_style;
-      _preselectChip('optStyle', extracted.travel_style);
     }
     if (extracted.budget_tier && missing.indexOf('budget_tier') >= 0) {
       surveyProfile.budget_tier = extracted.budget_tier;
-      _preselectChip('optBudget', extracted.budget_tier);
     }
     if (extracted.pace && missing.indexOf('pace') >= 0) {
       surveyProfile.pace = extracted.pace;
-      _preselectChip('optPace', extracted.pace);
     }
 
     document.getElementById('surveyOverlay').classList.remove('hidden');
-  }
-
-  function _preselectChip(containerId, value) {
-    const chips = document.querySelectorAll('#' + containerId + ' .survey-chip');
-    chips.forEach(function(chip) {
-      // chip text contains the value in its data — match by checking rendered items
-      // We stored value in onclick; re-trigger by checking textContent won't work.
-      // Instead, we'll just visually mark it (the surveyProfile is already set above).
-    });
   }
 
   // ── i18n ─────────────────────────────────────────
@@ -1079,6 +1048,7 @@
   let sessionId = null;
   let sending = false;
 
+  const mainLayout = document.getElementById('mainLayout');
   const messagesEl = document.getElementById('messages');
   const emptyStateEl = document.getElementById('emptyState');
   const inputEl = document.getElementById('input');
@@ -1111,14 +1081,11 @@
       btn.onclick = function() { sendQuick(btn); };
       quickStarts.appendChild(btn);
     });
-
   }
 
   function switchLang(lang) {
     applyLang(lang);
     buildSurvey(lang);
-
-    // 如果已有计划书，用新语言重新渲染
     if (sessionId && planFrame.style.display === 'block') {
       rerenderPlan(lang);
     }
@@ -1132,13 +1099,10 @@
     })
     .then(function(r) { return r.json(); })
     .then(function(d) {
-      if (d.plan_html) {
-        showPlan(d.plan_html);
-      }
+      if (d.plan_html) showPlan(d.plan_html);
     })
     .catch(function() {});
   }
-
 
   // Init
   applyLang('en');
@@ -1161,17 +1125,26 @@
 
     const div = document.createElement('div');
     div.className = 'msg ' + role;
-    div.textContent = text;
 
-    if (role === 'assistant' && planFrame.style.display === 'block') {
-      const btn = document.createElement('button');
-      btn.className = 'view-plan-btn';
-      btn.innerHTML = t.viewPlan + ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
-      btn.onclick = function() {
-        document.querySelector('.preview-panel').scrollIntoView({ behavior: 'smooth' });
-      };
-      div.appendChild(document.createElement('br'));
-      div.appendChild(btn);
+    if (role === 'assistant') {
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+
+      if (planFrame.style.display === 'block') {
+        const btn = document.createElement('button');
+        btn.className = 'view-plan-btn';
+        btn.innerHTML = t.viewPlan + ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+        btn.onclick = function() {
+          document.querySelector('.preview-panel').scrollIntoView({ behavior: 'smooth' });
+        };
+        bubble.appendChild(document.createElement('br'));
+        bubble.appendChild(btn);
+      }
+
+      div.appendChild(bubble);
+    } else {
+      div.textContent = text;
     }
 
     messagesEl.appendChild(div);
@@ -1179,9 +1152,9 @@
   }
 
   function showPlan(html) {
+    mainLayout.classList.add('has-plan');
     placeholderEl.style.display = 'none';
     planFrame.style.display = 'block';
-    // 注入 sessionId 供 iframe 内的动态搜索使用
     var inject = '<script>window._sessionId="' + (sessionId || '') + '";<\/script>';
     planFrame.srcdoc = html.replace('</head>', inject + '</head>');
   }
@@ -1198,9 +1171,9 @@
   function showProgress(pct, status) {
     const t = I18N[currentLang];
     if (_hideProgressTimer) { clearTimeout(_hideProgressTimer); _hideProgressTimer = null; }
+    mainLayout.classList.add('has-plan');
     placeholderEl.style.display = 'none';
     progressOverlay.style.display = 'flex';
-    // force reflow so opacity transition triggers
     void progressOverlay.offsetHeight;
     progressOverlay.classList.add('active');
     progressFill.style.width = pct + '%';
@@ -1213,7 +1186,6 @@
   function hideProgress() {
     if (_hideProgressTimer) { clearTimeout(_hideProgressTimer); _hideProgressTimer = null; }
     if (!_progressShownAt) {
-      // not currently showing — just clean up
       progressOverlay.classList.remove('active');
       progressOverlay.style.display = '';
       return;
@@ -1226,7 +1198,6 @@
     }
     _progressShownAt = 0;
     progressOverlay.classList.remove('active');
-    // delay display:none until fade-out completes
     setTimeout(function() {
       if (!progressOverlay.classList.contains('active')) {
         progressOverlay.style.display = '';
@@ -1238,28 +1209,21 @@
     }, 300);
   }
 
-  // 根据流式进来的部分 plan dict 更新 loader 文案
   function handlePlanPartial(plan) {
     const t = I18N[currentLang];
+    mainLayout.classList.add('has-plan');
     placeholderEl.style.display = 'none';
     progressOverlay.style.display = 'flex';
     progressOverlay.classList.add('active');
     if (!_progressShownAt) _progressShownAt = Date.now();
 
-    // 主状态: 优先用 title, 否则用 destination, 否则保留当前
-    if (plan.title) {
-      progressStatus.textContent = plan.title;
-    } else if (plan.destination) {
-      progressStatus.textContent = plan.destination;
-    }
+    if (plan.title) progressStatus.textContent = plan.title;
+    else if (plan.destination) progressStatus.textContent = plan.destination;
 
-    // 副状态: 当前正在生成的天数和主题
     const days = Array.isArray(plan.daily_plans) ? plan.daily_plans : [];
     if (days.length > 0) {
       const last = days[days.length - 1] || {};
-      const dayLabel = currentLang === 'zh'
-        ? `Day ${last.day || days.length}`
-        : `Day ${last.day || days.length}`;
+      const dayLabel = `Day ${last.day || days.length}`;
       const theme = last.theme ? ' · ' + last.theme : '';
       const actCount = Array.isArray(last.activities) ? last.activities.length : 0;
       const actLabel = actCount > 0
@@ -1267,11 +1231,9 @@
         : '';
       progressSub.textContent = dayLabel + theme + actLabel;
     } else if (plan.overview) {
-      // 还没到 daily_plans 阶段，先显示 overview 的前几十字
       progressSub.textContent = plan.overview.slice(0, 80);
     }
 
-    // 进度条: 按 daily_plans 长度粗略推进 (50% → 70%)
     if (days.length > 0) {
       const pct = Math.min(70, 50 + days.length * 3);
       progressFill.style.width = pct + '%';
@@ -1284,7 +1246,6 @@
     if (!text || sending) return;
 
     quickStarts.style.display = 'none';
-
     addMessage('user', text);
     inputEl.value = '';
     sending = true;
@@ -1293,7 +1254,6 @@
 
     const t = I18N[currentLang];
     const currency = document.getElementById('currencySelect').value;
-
     showProgress(5, t.thinking);
 
     try {
@@ -1316,23 +1276,18 @@
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
         buffer = lines.pop();
-
         for (const line of lines) {
           if (line.startsWith('event: ')) {
             eventType = line.slice(7).trim();
           } else if (line.startsWith('data: ') && eventType) {
             try {
               const data = JSON.parse(line.slice(6));
-              if (eventType === 'progress') {
-                showProgress(data.pct, data.status);
-              } else if (eventType === 'plan_partial') {
-                handlePlanPartial(data.plan || {});
-              } else if (eventType === 'show_survey') {
-                // LLM 判断需要弹问卷
+              if (eventType === 'progress') showProgress(data.pct, data.status);
+              else if (eventType === 'plan_partial') handlePlanPartial(data.plan || {});
+              else if (eventType === 'show_survey') {
                 hideProgress();
                 typingEl.classList.remove('active');
                 openSurvey(data.missing_fields || [], data.extracted || {});
@@ -1341,9 +1296,7 @@
                 typingEl.classList.remove('active');
                 hideProgress();
                 addMessage('assistant', data.reply);
-                if (data.plan_html) {
-                  showPlan(data.plan_html);
-                }
+                if (data.plan_html) showPlan(data.plan_html);
               }
             } catch (e) {}
             eventType = '';

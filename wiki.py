@@ -53,8 +53,32 @@ def _search_unsplash(query: str) -> str | None:
     return None
 
 
+def _search_google_places_photo(place_name: str) -> tuple[str | None, float | None, float | None]:
+    """Try Google Places to get a photo URL + coordinates for a place.
+
+    Returns (photo_url, lat, lon) — any may be None.
+    """
+    try:
+        from tools.places import search_places, get_photo_url
+    except ImportError:
+        return None, None, None
+
+    try:
+        results = search_places(place_name, max_results=1, language="en")
+        if not results:
+            return None, None, None
+        poi = results[0]
+        photo_url = get_photo_url(poi.photo_name, max_width=800) if poi.photo_name else None
+        lat = poi.lat if poi.lat else None
+        lng = poi.lng if poi.lng else None
+        return photo_url, lat, lng
+    except Exception as e:
+        log.warning(f"[wiki] Google Places photo error for {place_name}: {e}")
+        return None, None, None
+
+
 def fetch_place_info(place_name: str, language: str = "zh") -> PlaceInfo:
-    """获取地点信息。图片：Unsplash 优先，Wikipedia fallback。"""
+    """获取地点信息。图片优先级：Google Places > Unsplash > Wikipedia。"""
     t0 = time.time()
     # 根据语言决定 Wikipedia API 优先顺序
     if language == "en":
@@ -75,18 +99,29 @@ def fetch_place_info(place_name: str, language: str = "zh") -> PlaceInfo:
     if info is None:
         info = PlaceInfo(name=place_name, summary="", image_url=None)
 
-    # Unsplash 高质量图片覆盖 Wikipedia 图片
-    log.info(f"[wiki] {place_name}: fetching unsplash...")
-    t2 = time.time()
-    unsplash_url = _search_unsplash(place_name)
-    if unsplash_url:
-        info.image_url = unsplash_url
-        log.info(f"[wiki] {place_name}: unsplash OK ({time.time()-t2:.1f}s)")
+    # Google Places 图片 + 坐标 (最高优先级图片，同时补充坐标)
+    log.info(f"[wiki] {place_name}: fetching Google Places photo...")
+    t_gp = time.time()
+    gp_photo, gp_lat, gp_lng = _search_google_places_photo(place_name)
+    if gp_photo:
+        info.image_url = gp_photo
+        log.info(f"[wiki] {place_name}: Google Places photo OK ({time.time()-t_gp:.1f}s)")
     else:
-        log.info(f"[wiki] {place_name}: unsplash MISS ({time.time()-t2:.1f}s)")
+        log.info(f"[wiki] {place_name}: Google Places photo MISS ({time.time()-t_gp:.1f}s)")
+        # Unsplash fallback（仅在 Google Places 无图时）
+        log.info(f"[wiki] {place_name}: fetching unsplash...")
+        t2 = time.time()
+        unsplash_url = _search_unsplash(place_name)
+        if unsplash_url:
+            info.image_url = unsplash_url
+            log.info(f"[wiki] {place_name}: unsplash OK ({time.time()-t2:.1f}s)")
+        else:
+            log.info(f"[wiki] {place_name}: unsplash MISS ({time.time()-t2:.1f}s)")
 
-    # 坐标 fallback
-    if info.lat is None:
+    # 坐标：Google Places > Wikipedia > Nominatim
+    if gp_lat and gp_lng:
+        info.lat, info.lon = gp_lat, gp_lng
+    elif info.lat is None:
         log.info(f"[wiki] {place_name}: geocoding via nominatim...")
         t3 = time.time()
         coords = _geocode_nominatim(place_name)

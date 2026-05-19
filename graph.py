@@ -49,6 +49,7 @@ from tools import ALL_TOOLS
 from tools.embeds import search_embeds_batch
 from tools.links import search_videos_batch
 from tools.directions import TransitInfo, get_day_transits, _haversine_meters
+from tools.places import search_destination_pois, format_pois_for_prompt
 from tools.travel_api import TravelDeals, fetch_travel_deals
 from wiki import PlaceInfo, fetch_place_info
 
@@ -241,7 +242,7 @@ def _merge_keyword_into_profile(profile_dict: dict, kw: dict) -> dict:
 
 
 _PROFILE_FIELDS = ("travel_style", "budget_tier", "interests")
-_MIN_PROFILE_COUNT = 2  # 画像字段至少填 2/4 才能直接生成
+_MIN_PROFILE_COUNT = 1  # 画像字段至少填 1/3 才能直接生成（dest+days 是硬性要求）
 
 
 def _is_ready_to_proceed(profile: ExtractedIntakeProfile) -> bool:
@@ -679,6 +680,19 @@ def _build_plan_messages(state: State) -> list[BaseMessage]:
     if rag_ctx:
         label = "知识库参考资料" if lang == "zh" else "Knowledge Base Reference"
         result.append(HumanMessage(content=f"[{label}]\n{rag_ctx}"))
+
+    # 3.5 Google Places 真实 POI 数据 — 让 LLM 从真实景点中选择
+    destination = ctx.destination if ctx else None
+    if destination and not (plan is not None and state.get("plan_generated")):
+        # 仅首次生成时拉取，修改计划时不重新拉
+        try:
+            pois = search_destination_pois(destination, language=lang)
+            pois_text = format_pois_for_prompt(pois, language=lang)
+            if pois_text:
+                result.append(HumanMessage(content=pois_text))
+                log.info(f"[build_plan_messages] injected Google Places POIs for {destination}")
+        except Exception as e:
+            log.warning(f"[build_plan_messages] Places POI fetch failed: {e}")
 
     # 4. 最近 N 条消息
     recent = _trim_messages(all_msgs, PLAN_RECENT_MSGS)

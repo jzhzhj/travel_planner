@@ -15,8 +15,8 @@ from tools.links import RecommendationLinks
 from tools.travel_api import TravelDeals
 from wiki import PlaceInfo
 
-# 每天行程的颜色（编辑风 / 大地色调，与 aubergine+terracotta 主色调呼应）
-DAY_COLORS = ["#C85A3C", "#2A182E", "#6B7B3A", "#2E5D5E", "#D4A34A", "#A65365", "#4D6940"]
+# 每天行程的颜色（Open Canvas 风 — 大地/石色调，无橙色）
+DAY_COLORS = ["#0C0C0E", "#6B7B3A", "#2E5D5E", "#8C7A65", "#4A6880", "#7A6B82", "#4D6940"]
 
 # ── 双语标签 ────────────────────────────────────────────────────────────────
 LABELS = {
@@ -46,6 +46,7 @@ LABELS = {
         "slot_afternoon": "下午",
         "slot_evening": "晚上",
         "slot_empty": "拖入活动",
+        "refresh_transit": "刷新通行时间",
     },
     "en": {
         "overview": "Trip Overview",
@@ -73,6 +74,7 @@ LABELS = {
         "slot_afternoon": "Afternoon",
         "slot_evening": "Evening",
         "slot_empty": "Drop activity here",
+        "refresh_transit": "Refresh Transit",
     },
 }
 
@@ -87,31 +89,31 @@ HTML_TEMPLATE = """\
 <title>{title}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 {map_head}
 <style>
   :root {{
-    --bg:            #F6F2EC;
+    --bg:            #F8F6F1;
     --bg-card:       #FFFFFF;
-    --surface:       #FBF8F2;
-    --primary:       #2A182E;
-    --primary-soft:  #3D2942;
-    --primary-ink:   #1F1419;
-    --accent:        #C85A3C;
-    --accent-soft:   #E8725C;
-    --restaurant:    #D4763A;
-    --restaurant-bg: #FFF8F2;
-    --restaurant-border: #F0C8A8;
-    --restaurant-badge: #D4763A;
-    --text:          #1F1419;
-    --text-dim:      #7A6F6A;
-    --text-muted:    #A69E98;
-    --border:        #E5DFD4;
+    --surface:       #F2F0EB;
+    --primary:       #0C0C0E;
+    --primary-soft:  #2A2826;
+    --primary-ink:   #0C0C0E;
+    --accent:        #8C7A65;
+    --accent-soft:   #A69484;
+    --restaurant:    #7A6B58;
+    --restaurant-bg: #F8F4EE;
+    --restaurant-border: #E0D6C8;
+    --restaurant-badge: #7A6B58;
+    --text:          #0C0C0E;
+    --text-dim:      #6A6460;
+    --text-muted:    #B0A898;
+    --border:        #E5E0D8;
     --border-soft:   #EFEBE2;
-    --shadow-card:   0 1px 2px rgba(42, 24, 46, 0.04), 0 8px 32px rgba(42, 24, 46, 0.05);
-    --shadow-lg:     0 20px 80px rgba(42, 24, 46, 0.14);
-    --font-serif:    'Fraunces', 'Cormorant Garamond', Georgia, serif;
-    --font-sans:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --shadow-card:   0 1px 2px rgba(12, 12, 14, 0.03), 0 8px 32px rgba(12, 12, 14, 0.04);
+    --shadow-lg:     0 20px 60px rgba(12, 12, 14, 0.1);
+    --font-serif:    'DM Serif Display', Georgia, serif;
+    --font-sans:     'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }}
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
   body {{ font-family: var(--font-sans); background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }}
@@ -159,7 +161,7 @@ HTML_TEMPLATE = """\
   .drag-handle:active {{ cursor: grabbing; }}
   .drag-handle svg {{ pointer-events: none; }}
   .activities-zone {{ min-height: 48px; transition: background 0.2s; }}
-  .activities-zone.drag-over-zone {{ background: rgba(200,90,60,0.06); }}
+  .activities-zone.drag-over-zone {{ background: rgba(140,122,101,0.06); }}
   .activity:last-child {{ border-bottom: none; }}
 
   /* ── Transit connector between activities ── */
@@ -256,19 +258,19 @@ HTML_TEMPLATE = """\
   /* 空 slot — 没有活动时的占位 */
   .slot-empty {{ padding: 28px 40px; text-align: center; color: var(--text-muted); font-size: 0.85em; border: 2px dashed var(--border); border-radius: 10px; margin: 14px 28px; transition: border-color 0.25s, background 0.25s, opacity 0.25s, transform 0.2s; opacity: 0.55; display: flex; align-items: center; justify-content: center; gap: 8px; }}
   .slot-empty svg {{ flex-shrink: 0; opacity: 0.5; }}
-  .slot-empty.drag-over-empty {{ border-color: var(--accent); background: rgba(200, 90, 60, 0.08); opacity: 1; transform: scale(1.01); }}
+  .slot-empty.drag-over-empty {{ border-color: var(--accent); background: rgba(140, 122, 101, 0.08); opacity: 1; transform: scale(1.01); }}
 
   /* drop 尾巴条 — 每个 zone 底部始终可见的放置区域 */
   .drop-tail {{ padding: 10px 40px; text-align: center; color: var(--text-muted); font-size: 0.72em; font-weight: 500; letter-spacing: 0.08em; border: 1.5px dashed transparent; border-radius: 8px; margin: 6px 28px 10px; transition: all 0.2s; cursor: default; opacity: 0; height: 0; padding: 0; margin: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 6px; }}
   body.dragging-active .drop-tail {{ opacity: 0.7; height: auto; padding: 10px 40px; margin: 6px 28px 10px; border-color: var(--border); }}
-  .drop-tail.drag-over-tail {{ border-color: var(--accent) !important; background: rgba(200, 90, 60, 0.08); opacity: 1 !important; }}
+  .drop-tail.drag-over-tail {{ border-color: var(--accent) !important; background: rgba(140, 122, 101, 0.08); opacity: 1 !important; }}
   body.dragging-active .slot-empty {{ border-color: var(--accent-soft); opacity: 1; }}
   body.dragging-active .slot-empty.drag-over-empty {{ border-style: solid; }}
   .activity-img {{ flex-shrink: 0; width: 220px; height: 160px; border-radius: 10px; overflow: hidden; background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; transition: transform 0.25s ease, box-shadow 0.25s ease; border: 1px solid var(--border-soft); }}
   .activity-img:hover {{ transform: scale(1.02); box-shadow: var(--shadow-card); }}
   .activity-img img {{ width: 100%; height: 100%; object-fit: cover; }}
 
-  .lightbox {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 20, 25, 0.92); z-index: 9999; align-items: center; justify-content: center; cursor: zoom-out; backdrop-filter: blur(6px); }}
+  .lightbox {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(12, 12, 14, 0.92); z-index: 9999; align-items: center; justify-content: center; cursor: zoom-out; backdrop-filter: blur(6px); }}
   .lightbox.active {{ display: flex; }}
   .lightbox img {{ max-width: 90%; max-height: 85vh; border-radius: 10px; box-shadow: var(--shadow-lg); object-fit: contain; }}
   .lightbox .caption {{ position: absolute; bottom: 32px; left: 50%; transform: translateX(-50%); color: var(--bg); font-family: var(--font-serif); font-style: italic; font-size: 1.15em; text-shadow: 0 2px 8px rgba(0,0,0,0.5); text-align: center; max-width: 80%; }}
@@ -345,7 +347,7 @@ HTML_TEMPLATE = """\
   .embed-card:hover {{ transform: translateY(-2px); box-shadow: var(--shadow-card); }}
   .embed-card .embed-thumb {{ width: 140px; height: 180px; background: var(--primary-ink); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }}
   .embed-card .embed-thumb img {{ width: 100%; height: 100%; object-fit: cover; }}
-  .embed-card .embed-thumb .play-overlay {{ position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(31,20,25,0.28); opacity: 0; transition: opacity 0.2s; }}
+  .embed-card .embed-thumb .play-overlay {{ position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(12,12,14,0.28); opacity: 0; transition: opacity 0.2s; }}
   .embed-card:hover .play-overlay {{ opacity: 1; }}
   .embed-card .embed-thumb .play-overlay svg {{ filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4)); }}
   .embed-card .embed-meta {{ padding: 8px 10px; background: var(--bg-card); border: 1px solid var(--border-soft); border-top: none; border-radius: 0 0 10px 10px; }}
@@ -387,7 +389,7 @@ HTML_TEMPLATE = """\
   .rec-card .tier-badge {{ display: inline-block; font-size: 0.65em; font-weight: 600; padding: 4px 11px; border-radius: 20px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.1em; border: 1px solid transparent; }}
   .rec-card .tier-badge.budget {{ background: var(--surface); color: #6B7B3A; border-color: #D4DCB8; }}
   .rec-card .tier-badge.mid-range {{ background: var(--surface); color: var(--primary); border-color: var(--border); }}
-  .rec-card .tier-badge.premium {{ background: var(--surface); color: var(--accent); border-color: #E8C9BE; }}
+  .rec-card .tier-badge.premium {{ background: var(--surface); color: var(--accent); border-color: #D4CFC8; }}
   .rec-card .rec-name {{ font-family: var(--font-serif); font-size: 1.2em; font-weight: 500; margin-bottom: 8px; color: var(--primary); letter-spacing: -0.01em; }}
   .rec-card .rec-detail {{ font-size: 0.84em; color: var(--text-dim); margin-bottom: 4px; }}
   .rec-card .rec-price {{ font-family: var(--font-serif); font-size: 1.35em; font-weight: 500; color: var(--accent); margin: 12px 0 6px; letter-spacing: -0.01em; }}
@@ -414,12 +416,12 @@ HTML_TEMPLATE = """\
     width: 220px; flex-shrink: 0;
     position: sticky; top: 0; height: 100vh;
     background: var(--bg-card); border-left: 1px solid var(--border-soft);
-    box-shadow: -2px 0 12px rgba(42,24,46,0.06);
+    box-shadow: -2px 0 12px rgba(12,12,14,0.06);
     overflow-y: auto; padding: 0;
     display: flex; flex-direction: column;
     transition: box-shadow 0.25s;
   }}
-  body.dragging-active .drag-panel {{ box-shadow: -4px 0 24px rgba(200,90,60,0.15); }}
+  body.dragging-active .drag-panel {{ box-shadow: -4px 0 24px rgba(140,122,101,0.15); }}
   .drag-panel-title {{
     padding: 12px 12px 10px; font-family: var(--font-serif); font-size: 0.85em;
     font-weight: 600; color: var(--primary); letter-spacing: 0.04em;
@@ -513,7 +515,7 @@ HTML_TEMPLATE = """\
     display: flex; flex-direction: column; gap: 6px;
   }}
   .drag-panel-hold.empty {{ align-items: center; justify-content: center; text-align: center; }}
-  .drag-panel-hold.drag-over-hold {{ border-color: var(--accent); background: rgba(200,90,60,0.06); }}
+  .drag-panel-hold.drag-over-hold {{ border-color: var(--accent); background: rgba(140,122,101,0.06); }}
   .drag-panel-hold .held-card {{
     padding: 7px 10px; background: var(--surface); border: 1px solid var(--border-soft);
     border-radius: 7px; font-size: 0.85em; color: var(--text); cursor: grab;
@@ -643,14 +645,6 @@ HTML_TEMPLATE = """\
     <div class="drag-panel-hold empty" id="dragPanelHoldActivities"></div>
     <button class="suggest-btn" id="suggestActivitiesBtn"></button>
     <div class="suggest-results" id="suggestActivitiesResults"></div>
-    <div class="drag-panel-add" id="dragPanelAdd"></div>
-    <div class="drag-panel-add-form" id="dragPanelForm">
-      <input type="text" id="dragPanelInput" placeholder="">
-      <div class="add-form-actions">
-        <button class="btn-confirm" id="dragPanelConfirm"></button>
-        <button class="btn-cancel" id="dragPanelCancel"></button>
-      </div>
-    </div>
   </div>
 </div>
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
@@ -1078,6 +1072,7 @@ HTML_TEMPLATE = """\
         refreshState();
         var dc = card.closest('.day-card');
         if (dc && window._recalcFreeTime) window._recalcFreeTime(dc);
+        if (dc && window._recalcTransit) window._recalcTransit(dc);
       }}
     }});
   }}
@@ -1106,6 +1101,7 @@ HTML_TEMPLATE = """\
       refreshState();
       var dc = zone.closest('.day-card');
       if (dc && window._recalcFreeTime) window._recalcFreeTime(dc);
+      if (dc && window._recalcTransit) window._recalcTransit(dc);
     }});
   }});
 
@@ -1267,7 +1263,7 @@ HTML_TEMPLATE = """\
   }}
 
   // 创建 held-card 元素
-  function createHeldCard(name, activityEl, desc) {{
+  function createHeldCard(name, activityEl, desc, lat, lng) {{
     var hc = document.createElement('div');
     hc.className = 'held-card';
     hc.draggable = true;
@@ -1276,6 +1272,8 @@ HTML_TEMPLATE = """\
     var descHtml = desc ? '<div class="held-desc">' + desc + '</div>' : '';
     hc.innerHTML = dot + '<div class="held-info"><div class="held-name">' + name + '</div>' + descHtml + '</div>' + rm;
     hc._activityEl = activityEl || null;
+    hc._lat = lat || 0;
+    hc._lng = lng || 0;
 
     // 拖拽回行程
     hc.addEventListener('dragstart', function(e) {{
@@ -1285,8 +1283,13 @@ HTML_TEMPLATE = """\
         var heldDesc = hc.querySelector('.held-desc');
         hc._activityEl = createActivityCard(
           heldName ? heldName.textContent.trim() : 'Activity',
-          heldDesc ? heldDesc.textContent.trim() : ''
+          heldDesc ? heldDesc.textContent.trim() : '',
+          hc._lat, hc._lng
         );
+      }} else if (hc._activityEl && !hc._activityEl.getAttribute('data-lat')) {{
+        // 从计划中拖出的卡片保留坐标
+        if (hc._lat) hc._activityEl.setAttribute('data-lat', String(hc._lat));
+        if (hc._lng) hc._activityEl.setAttribute('data-lng', String(hc._lng));
       }}
       dragSrc = hc._activityEl;
       window._dragSrc = dragSrc;
@@ -1303,6 +1306,9 @@ HTML_TEMPLATE = """\
       if (dragSrc && dragSrc.parentNode && dragSrc.parentNode.classList.contains('activities-zone')) {{
         hc.remove();
         updateHoldEmpty();
+        var dc = dragSrc.closest('.day-card');
+        if (dc && window._recalcFreeTime) window._recalcFreeTime(dc);
+        if (dc && window._recalcTransit) window._recalcTransit(dc);
       }}
       if (dragSrc) dragSrc._fromHold = false;
       dragSrc = null;
@@ -1341,16 +1347,19 @@ HTML_TEMPLATE = """\
       var actName = h3 ? h3.textContent.trim() : 'Activity';
       var descEl = dragSrc.querySelector('.desc');
       var actDesc = descEl ? descEl.textContent.trim() : '';
+      var origLat = parseFloat(dragSrc.getAttribute('data-lat')) || 0;
+      var origLng = parseFloat(dragSrc.getAttribute('data-lng')) || 0;
       var origActivity = dragSrc;
       origActivity.remove();
       if (holdEl.classList.contains('empty')) {{
         holdEl.innerHTML = '';
         holdEl.classList.remove('empty');
       }}
-      holdEl.appendChild(createHeldCard(actName, origActivity, actDesc));
+      holdEl.appendChild(createHeldCard(actName, origActivity, actDesc, origLat, origLng));
       updateHoldEmpty();
       refreshState();
       if (srcDayCard && window._recalcFreeTime) window._recalcFreeTime(srcDayCard);
+      if (srcDayCard && window._recalcTransit) window._recalcTransit(srcDayCard);
       if (selectedDay) selectDay(selectedDay);
     }});
   }}
@@ -1372,13 +1381,16 @@ HTML_TEMPLATE = """\
   }}
   if (panelCancel) panelCancel.addEventListener('click', closeAddForm);
   // 创建一个新的 activity 卡片 DOM 元素
-  function createActivityCard(name, desc) {{
+  function createActivityCard(name, desc, lat, lng) {{
     var card = document.createElement('div');
     card.className = 'activity';
     card.draggable = true;
     card.setAttribute('data-restaurant', 'false');
     card.setAttribute('data-start', '');
     card.setAttribute('data-duration', '60');
+    card.setAttribute('data-lat', (lat && lat !== 0) ? String(lat) : '');
+    card.setAttribute('data-lng', (lng && lng !== 0) ? String(lng) : '');
+    card.setAttribute('data-place-name', name || '');
     var dragLabel = isZh ? '拖动排序' : 'Drag';
     card.innerHTML =
       '<div class="drag-handle" title="' + dragLabel + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>' + dragLabel + '</div>' +
@@ -1386,7 +1398,7 @@ HTML_TEMPLATE = """\
       '<div class="activity-body">' +
         '<h3>' + name + '</h3>' +
         (desc ? '<div class="desc">' + desc + '</div>' : '<div class="desc"></div>') +
-        '<div class="meta"><span class="time-range" data-start="" data-duration="60" style="color:#C85A3C;font-weight:500;cursor:pointer;" title="' + (isZh ? '点击修改时长' : 'click to edit') + '">⏱ ' + (isZh ? '建议游玩' : 'Suggested') + ' 1h</span></div>' +
+        '<div class="meta"><span class="time-range" data-start="" data-duration="60" style="color:#8C7A65;font-weight:500;cursor:pointer;" title="' + (isZh ? '点击修改时长' : 'click to edit') + '">⏱ ' + (isZh ? '建议游玩' : 'Suggested') + ' 1h</span></div>' +
       '</div>';
     attachCardListeners(card);
     return card;
@@ -1415,6 +1427,7 @@ HTML_TEMPLATE = """\
     }}
     refreshState();
     recalcFreeTime(dayCard);
+    if (window._recalcTransit) window._recalcTransit(dayCard);
     selectDay(selectedDay);
     // 滚动到新卡片
     card.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
@@ -1489,7 +1502,7 @@ HTML_TEMPLATE = """\
             holdEl.innerHTML = '';
             holdEl.classList.remove('empty');
           }}
-          if (holdEl) holdEl.appendChild(createHeldCard(name, null, item.desc || ''));
+          if (holdEl) holdEl.appendChild(createHeldCard(name, null, item.desc || '', item.lat || 0, item.lng || 0));
         }});
         updateHoldEmpty();
       }})
@@ -1596,9 +1609,10 @@ HTML_TEMPLATE = """\
         if (typeof updateHoldEmpty === 'function') updateHoldEmpty();
       }}
       if (typeof refreshState === 'function') refreshState();
-      // Recalculate free-time for this day
+      // Recalculate free-time and transit for this day
       var dayCard = src.closest('.day-card');
       if (dayCard) recalcFreeTime(dayCard);
+      if (dayCard && window._recalcTransit) window._recalcTransit(dayCard);
     }});
   }}
   // Expose for main drag script
@@ -1680,10 +1694,111 @@ HTML_TEMPLATE = """\
   }});
 }})();
 </script>
+<script>
+// ── Transit time recalculation (client-side haversine) ──
+(function() {{
+  var isZh = document.documentElement.lang === 'zh';
+
+  function haversineMeters(lat1, lon1, lat2, lon2) {{
+    var R = 6371000;
+    var toRad = Math.PI / 180;
+    var dLat = (lat2 - lat1) * toRad;
+    var dLon = (lon2 - lon1) * toRad;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * toRad) * Math.cos(lat2 * toRad) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    return R * 2 * Math.asin(Math.sqrt(a));
+  }}
+
+  function fmtDuration(mins) {{
+    if (mins < 60) return mins + ' mins';
+    var h = Math.floor(mins / 60), m = mins % 60;
+    return m ? h + ' hour' + (h > 1 ? 's' : '') + ' ' + m + ' mins'
+             : h + ' hour' + (h > 1 ? 's' : '');
+  }}
+
+  function fmtDistance(meters) {{
+    if (meters < 1000) return Math.round(meters) + ' m';
+    return (meters / 1000).toFixed(1) + ' km';
+  }}
+
+  function estimateTransit(lat1, lon1, lat2, lon2) {{
+    var dist = haversineMeters(lat1, lon1, lat2, lon2);
+    var road = dist * 1.3;
+    var walkMins = Math.round(road / (5000 / 60));
+    if (walkMins <= 25) {{
+      return {{
+        mode: 'walking',
+        durationText: fmtDuration(walkMins),
+        distanceText: '~' + fmtDistance(Math.round(road))
+      }};
+    }}
+    var driveMins = Math.max(1, Math.round(road / (35000 / 60)));
+    return {{
+      mode: 'driving',
+      durationText: '~' + fmtDuration(driveMins),
+      distanceText: '~' + fmtDistance(Math.round(road))
+    }};
+  }}
+
+  function buildTransitRow(info) {{
+    var modeClass, icon, label;
+    if (info.mode === 'walking') {{
+      modeClass = 'walk';
+      icon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><path d="M10 22l2-7 4 3v6M10 22l-2-4 4-3"/></svg>';
+      label = isZh ? ('\u6b65\u884c ' + info.durationText) : ('Walk ' + info.durationText);
+    }} else {{
+      modeClass = 'drive';
+      icon = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="1" y="6" width="22" height="10" rx="2"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>';
+      label = isZh ? ('\u9a7e\u8f66 ' + info.durationText) : ('Drive ' + info.durationText);
+    }}
+    var div = document.createElement('div');
+    div.className = 'transit-row';
+    div.innerHTML =
+      '<span class="transit-icon ' + modeClass + '">' + icon + '</span>' +
+      '<span class="transit-label ' + modeClass + '">' + label + '</span>' +
+      '<span class="transit-dist">' + info.distanceText + '</span>';
+    return div;
+  }}
+
+  function recalcTransit(dayCard) {{
+    // Remove all existing transit rows
+    dayCard.querySelectorAll('.transit-row').forEach(function(el) {{ el.remove(); }});
+
+    // Per-zone calculation: only insert transit between activities in the SAME zone
+    var zones = dayCard.querySelectorAll('.activities-zone');
+    zones.forEach(function(zone) {{
+      var acts = zone.querySelectorAll('.activity');
+      if (acts.length < 2) return;
+
+      for (var i = 0; i < acts.length - 1; i++) {{
+        var a = acts[i], b = acts[i + 1];
+        var lat1 = parseFloat(a.getAttribute('data-lat'));
+        var lon1 = parseFloat(a.getAttribute('data-lng'));
+        var lat2 = parseFloat(b.getAttribute('data-lat'));
+        var lon2 = parseFloat(b.getAttribute('data-lng'));
+        if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) continue;
+        if (lat1 === 0 && lon1 === 0) continue;
+        if (lat2 === 0 && lon2 === 0) continue;
+
+        var info = estimateTransit(lat1, lon1, lat2, lon2);
+        var transitEl = buildTransitRow(info);
+        // Insert after current activity (within same zone)
+        zone.insertBefore(transitEl, a.nextSibling);
+      }}
+    }});
+  }}
+
+  // Expose globally for drag-drop hooks
+  window._recalcTransit = recalcTransit;
+}})();
+</script>
 {map_script}
 </body>
 </html>
 """
+
+_REFRESH_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>'
 
 YT_SVG = '<svg class="platform-icon" width="20" height="20" viewBox="0 0 24 24" fill="#dc2626"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2 31.5 31.5 0 000 12a31.5 31.5 0 00.5 5.8 3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1A31.5 31.5 0 0024 12a31.5 31.5 0 00-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg>'
 BILI_SVG = '<svg class="platform-icon" width="20" height="20" viewBox="0 0 24 24" fill="#00a1d6"><path d="M17.8 2.8L16 6H8L6.2 2.8C5.8 2.1 4.9 1.9 4.2 2.3 3.5 2.7 3.3 3.6 3.7 4.3L4.8 6H3C1.3 6 0 7.3 0 9v10c0 1.7 1.3 3 3 3h18c1.7 0 3-1.3 3-3V9c0-1.7-1.3-3-3-3h-1.8l1.1-1.7c.4-.7.2-1.6-.5-2-.7-.4-1.6-.2-2 .5zM3 8h18c.6 0 1 .4 1 1v10c0 .6-.4 1-1 1H3c-.6 0-1-.4-1-1V9c0-.6.4-1 1-1zm5 3a1 1 0 00-1 1v3a1 1 0 002 0v-3a1 1 0 00-1-1zm8 0a1 1 0 00-1 1v3a1 1 0 002 0v-3a1 1 0 00-1-1z"/></svg>'
@@ -1802,7 +1917,7 @@ window.initMapKit = function() {{
     }});
     var annotations = [];
     data.forEach(function(p) {{
-      var color = p.isRestaurant ? '#D4763A' : colors[(p.day - 1) % colors.length];
+      var color = p.isRestaurant ? '#7A6B58' : colors[(p.day - 1) % colors.length];
       var coord = new mapkit.Coordinate(p.lat, p.lon);
       var marker = new mapkit.MarkerAnnotation(coord, {{
         color: color,
@@ -1836,7 +1951,7 @@ window.initMapKit = function() {{
 
     dayPoints.forEach(function(p) {{
       var coord = new mapkit.Coordinate(p.lat, p.lon);
-      var mColor = p.isRestaurant ? '#D4763A' : color;
+      var mColor = p.isRestaurant ? '#7A6B58' : color;
       var marker = new mapkit.MarkerAnnotation(coord, {{
         color: mColor,
         glyphText: p.isRestaurant ? '🍽' : String(p.index),
@@ -1886,7 +2001,7 @@ def _render_google_map_script(map_data: list[dict]) -> str:
     }}, 100);
   }}
 
-  var RESTAURANT_COLOR = '#D4763A';
+  var RESTAURANT_COLOR = '#7A6B58';
 
   function activityIcon(number, color) {{
     return {{
@@ -2214,7 +2329,7 @@ def render_flight_cards(flights: list, language: str = "zh") -> str:
             <div class="rec-detail">{f.origin} → {f.destination} · {stops}</div>
             <div class="rec-detail">{f.departure_at}{(' — ' + f.return_at) if f.return_at else ''}</div>
             <div class="rec-price">${f.price:,} {f.currency}</div>
-            <div class="rec-note" style="font-style:normal; color:#C85A3C; margin-top:8px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; font-size:0.72em;">{L["search_flights"]} →</div>
+            <div class="rec-note" style="font-style:normal; color:#8C7A65; margin-top:8px; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; font-size:0.72em;">{L["search_flights"]} →</div>
           </a>""")
     return "".join(cards)
 
@@ -2268,10 +2383,10 @@ def _render_flight_deals(deals: TravelDeals | None, plan: TravelPlan, language: 
         </div>
         <span class="flight-count" id="ffCount"></span>
         <button class="show-more-btn" id="ffSearch" style="margin:0; padding:6px 18px; font-size:0.82em;">{"筛选" if zh else "Filter"}</button>
-        <button class="show-more-btn" id="ffRefresh" style="margin:0; padding:6px 18px; font-size:0.82em; border-color:#C85A3C; color:#C85A3C;">{"🔄 重新搜索" if zh else "🔄 Refresh"}</button>
+        <button class="show-more-btn" id="ffRefresh" style="margin:0; padding:6px 18px; font-size:0.82em; border-color:#8C7A65; color:#8C7A65;">{"🔄 重新搜索" if zh else "🔄 Refresh"}</button>
       </div>
       <div class="flight-loading hidden" id="ffLoading" style="text-align:center; padding:24px; color:#A69E98; font-size:0.9em;">
-        <div class="loading-spinner" style="display:inline-block; width:18px; height:18px; border:2px solid #E5DDD5; border-top-color:#C85A3C; border-radius:50%; animation:spin 0.8s linear infinite; margin-right:8px; vertical-align:middle;"></div>
+        <div class="loading-spinner" style="display:inline-block; width:18px; height:18px; border:2px solid #E5DDD5; border-top-color:#8C7A65; border-radius:50%; animation:spin 0.8s linear infinite; margin-right:8px; vertical-align:middle;"></div>
         {loading_label}
       </div>
       <div class="flight-empty hidden" id="ffEmpty" style="text-align:center; padding:24px; color:#A69E98; font-size:0.9em;">
@@ -2459,16 +2574,16 @@ def _render_day_hotel(hotel, api_hotel, destination: str, language: str = "zh") 
           <div style="flex:1; padding:20px 24px; display:flex; flex-direction:column; justify-content:center;">
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
               {HOTEL_SVG}
-              <span style="font-weight:600; color:#C85A3C; font-size:0.7em; text-transform:uppercase; letter-spacing:0.12em;">{tonight_label}</span>
+              <span style="font-weight:600; color:#8C7A65; font-size:0.7em; text-transform:uppercase; letter-spacing:0.12em;">{tonight_label}</span>
             </div>
-            <div style="font-family:'Fraunces',Georgia,serif; font-size:1.2em; font-weight:500; color:#2A182E; margin-bottom:4px; letter-spacing:-0.01em;">{html_lib.escape(api_hotel.name)}</div>
-            <div style="font-size:0.85em; color:#C85A3C; margin-bottom:4px;">{stars_html}</div>
+            <div style="font-family:'DM Serif Display',Georgia,serif; font-size:1.2em; font-weight:500; color:#0C0C0E; margin-bottom:4px; letter-spacing:-0.01em;">{html_lib.escape(api_hotel.name)}</div>
+            <div style="font-size:0.85em; color:#8C7A65; margin-bottom:4px;">{stars_html}</div>
             <div style="font-size:0.82em; color:#7A6F6A;">{html_lib.escape(api_hotel.location_name)}</div>
           </div>
           <div style="padding:20px 24px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; min-width:130px;">
-            <div style="font-family:'Fraunces',Georgia,serif; font-size:1.4em; font-weight:500; color:#C85A3C; letter-spacing:-0.01em;">${api_hotel.price_per_night:,} {api_hotel.currency}</div>
+            <div style="font-family:'DM Serif Display',Georgia,serif; font-size:1.4em; font-weight:500; color:#8C7A65; letter-spacing:-0.01em;">${api_hotel.price_per_night:,} {api_hotel.currency}</div>
             <div style="font-size:0.7em; color:#A69E98; text-transform:uppercase; letter-spacing:0.08em;">{L["per_night"]}</div>
-            <div style="font-size:0.7em; color:#2A182E; margin-top:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.1em;">{L["search_hotels"]} →</div>
+            <div style="font-size:0.7em; color:#0C0C0E; margin-top:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.1em;">{L["search_hotels"]} →</div>
           </div>
         </div>
       </a>"""
@@ -2497,18 +2612,18 @@ def _render_day_hotel(hotel, api_hotel, destination: str, language: str = "zh") 
       <{tag}{link_attr} style="display:block; text-decoration:none; color:inherit; padding: 24px 40px; border-top: 1px solid #E5DFD4; background: #FBF8F2;">
         <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
           {HOTEL_SVG}
-          <span style="font-weight:600; color:#C85A3C; font-size:0.72em; text-transform:uppercase; letter-spacing:0.12em;">{tonight_label}</span>
+          <span style="font-weight:600; color:#8C7A65; font-size:0.72em; text-transform:uppercase; letter-spacing:0.12em;">{tonight_label}</span>
           <span class="tier-badge {tier_css}" style="font-size:0.62em; padding:3px 10px; margin-bottom:0;">{tier_label}</span>
         </div>
         <div style="display:flex; gap:18px; align-items:center; flex-wrap:wrap;">
           <div style="flex:1; min-width:200px;">
-            <div style="font-family:'Fraunces',Georgia,serif; font-size:1.25em; font-weight:500; color:#2A182E; margin-bottom:6px; letter-spacing:-0.01em;">{html_lib.escape(hotel.name)}</div>
-            <div style="font-size:0.9em; color:#C85A3C; margin-bottom:4px;">{stars_html}</div>
+            <div style="font-family:'DM Serif Display',Georgia,serif; font-size:1.25em; font-weight:500; color:#0C0C0E; margin-bottom:6px; letter-spacing:-0.01em;">{html_lib.escape(hotel.name)}</div>
+            <div style="font-size:0.9em; color:#8C7A65; margin-bottom:4px;">{stars_html}</div>
             <div style="font-size:0.85em; color:#7A6F6A;">{html_lib.escape(hotel.area)}</div>
             {highlight_html}
           </div>
           <div style="text-align:right;">
-            <div style="font-family:'Fraunces',Georgia,serif; font-size:1.35em; font-weight:500; color:#C85A3C; letter-spacing:-0.01em;">{html_lib.escape(hotel.price_per_night)}</div>
+            <div style="font-family:'DM Serif Display',Georgia,serif; font-size:1.35em; font-weight:500; color:#8C7A65; letter-spacing:-0.01em;">{html_lib.escape(hotel.price_per_night)}</div>
             <div style="font-size:0.7em; color:#A69E98; text-transform:uppercase; letter-spacing:0.08em;">{L["per_night"]}</div>
           </div>
         </div>
@@ -2547,7 +2662,7 @@ def _render_activity(
             dur_hint = f"{dur}min"
         meta_parts.append(
             f'<span class="time-range" data-start="{html_lib.escape(start_raw)}" '
-            f'data-duration="{dur}" style="color:#C85A3C;font-weight:600;cursor:pointer;" '
+            f'data-duration="{dur}" style="color:#8C7A65;font-weight:600;cursor:pointer;" '
             f'title="{edit_label}">'
             f'🕐 {time_range} <span class="duration-edit-hint">({dur_hint})</span></span>'
         )
@@ -2560,7 +2675,7 @@ def _render_activity(
         dur_label = "建议游玩" if lang == "zh" else "Suggested"
         meta_parts.append(
             f'<span class="time-range" data-start="" data-duration="{dur}" '
-            f'style="color:#C85A3C;font-weight:500;cursor:pointer;" title="{edit_label}">'
+            f'style="color:#8C7A65;font-weight:500;cursor:pointer;" title="{edit_label}">'
             f'⏱ {dur_label} {dur_text}</span>'
         )
     if act.food_recommendation:
@@ -2583,7 +2698,7 @@ def _render_activity(
         rest_badge = f'<span class="restaurant-badge">{badge_text}</span>'
 
     return f"""
-    <div class="{cls}" draggable="true" data-restaurant="{str(is_rest).lower()}" data-start="{html_lib.escape(start_raw)}" data-duration="{dur}">
+    <div class="{cls}" draggable="true" data-restaurant="{str(is_rest).lower()}" data-start="{html_lib.escape(start_raw)}" data-duration="{dur}" data-lat="{place_info.lat if place_info and place_info.lat else ''}" data-lng="{place_info.lon if place_info and place_info.lon else ''}" data-place-name="{html_lib.escape(act.place_name)}">
       {drag_handle}
       <div class="activity-img">{img_html}</div>
       <div class="activity-body">
