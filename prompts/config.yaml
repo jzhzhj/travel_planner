@@ -1,0 +1,29 @@
+# Prompt 版本管理配置
+# 修改 version 即可切换 prompt 版本，无需改代码
+# 新建 v2.zh.md / v2.en.md 后把 version 改成 v2 即可生效
+
+prompts:
+  chat_system:
+    version: v1
+    description: "对话收集节点 — 自然聊天收集旅行需求"
+    variables: [currency]
+
+  extract_context:
+    version: v1
+    description: "上下文提取 — 从对话增量提取结构化旅行需求"
+    variables: [current_context]
+
+  plan_system:
+    version: v1
+    description: "计划生成节点 — 输出结构化旅行计划"
+    variables: [currency, today]
+
+  initial_intake:
+    version: v1
+    description: "首条消息分析 — LLM 提取画像并决定是否需要问卷"
+    variables: []
+
+  summarize:
+    version: v1
+    description: "上下文压缩 — 压缩结构化字段之外的叙事信息"
+    variables: [structured_fields, previous_summary]

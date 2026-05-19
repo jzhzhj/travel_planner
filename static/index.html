@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wander — Travel, crafted for you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:            #F6F2EC;
+    --bg-card:       #FFFFFF;
+    --surface:       #FBF8F2;
+    --primary:       #2A182E;
+    --primary-soft:  #3D2942;
+    --primary-ink:   #1F1419;
+    --accent:        #C85A3C;
+    --accent-soft:   #E8725C;
+    --text:          #1F1419;
+    --text-dim:      #7A6F6A;
+    --text-muted:    #A69E98;
+    --border:        #E5DFD4;
+    --border-soft:   #EFEBE2;
+    --shadow-card:   0 1px 2px rgba(42, 24, 46, 0.04), 0 8px 32px rgba(42, 24, 46, 0.05);
+    --shadow-lg:     0 20px 80px rgba(42, 24, 46, 0.14);
+    --font-serif:    'Fraunces', 'Cormorant Garamond', Georgia, serif;
+    --font-sans:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    font-size: 15px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body { display: flex; flex-direction: column; }
+
+  /* ── Header ───────────────────────────────────── */
+  .header {
+    background: var(--bg-card);
+    padding: 22px 44px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border-soft);
+    flex-shrink: 0;
+    z-index: 10;
+  }
+  .logo {
+    font-family: var(--font-serif);
+    font-size: 1.7rem;
+    font-weight: 400;
+    font-style: italic;
+    letter-spacing: -0.02em;
+    color: var(--primary);
+    line-height: 1;
+  }
+  .logo-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+  .header-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .setting-group select {
+    padding: 7px 28px 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg-card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237A6F6A' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 10px center;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    transition: border-color 0.15s;
+  }
+  .setting-group select:hover { border-color: var(--primary); }
+
+  /* ── Main Layout ──────────────────────────────── */
+  .main {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* ── Chat Panel ───────────────────────────────── */
+  .chat-panel {
+    width: 540px;
+    min-width: 440px;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-card);
+    border-right: 1px solid var(--border-soft);
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 44px 40px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+
+  /* Empty / welcome state */
+  .empty-state {
+    padding: 8px 0 12px;
+  }
+  .empty-state h1 {
+    font-family: var(--font-serif);
+    font-size: 2.1rem;
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--primary);
+    margin-bottom: 14px;
+  }
+  .empty-state h1 em {
+    font-style: italic;
+    font-weight: 400;
+  }
+  .empty-state p {
+    color: var(--text-dim);
+    font-size: 0.97rem;
+    line-height: 1.55;
+    max-width: 380px;
+  }
+
+  /* Messages */
+  .msg {
+    max-width: 88%;
+    padding: 13px 18px;
+    line-height: 1.55;
+    font-size: 0.93rem;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .msg.user {
+    align-self: flex-end;
+    background: var(--primary);
+    color: #F6F2EC;
+    border-radius: 18px 18px 4px 18px;
+  }
+  .msg.assistant {
+    align-self: flex-start;
+    background: var(--surface);
+    color: var(--text);
+    border-radius: 18px 18px 18px 4px;
+    border: 1px solid var(--border-soft);
+  }
+  .msg.system {
+    align-self: center;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    padding: 4px 0;
+    font-style: italic;
+    font-family: var(--font-serif);
+  }
+
+  /* Typing indicator */
+  .typing {
+    align-self: flex-start;
+    padding: 14px 18px;
+    background: var(--surface);
+    border-radius: 18px 18px 18px 4px;
+    border: 1px solid var(--border-soft);
+    display: none;
+    margin: 0 40px;
+  }
+  .typing.active { display: inline-flex; gap: 5px; align-items: center; }
+  .typing span {
+    width: 6px; height: 6px;
+    background: var(--primary);
+    border-radius: 50%;
+    animation: bounce 1.4s infinite;
+    opacity: 0.35;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.35; }
+    30% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  /* View plan pill */
+  .view-plan-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 12px;
+    padding: 8px 16px;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 100px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+  .view-plan-btn:hover {
+    background: var(--accent);
+    color: white;
+  }
+
+  /* ── Quick starts ─────────────────────────────── */
+  .quick-starts {
+    padding: 0 40px 20px;
+  }
+  .quick-label {
+    font-family: var(--font-serif);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 12px;
+    font-weight: 500;
+    font-style: italic;
+  }
+  .quick-btn {
+    display: block;
+    width: 100%;
+    padding: 16px 48px 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    line-height: 1.55;
+    position: relative;
+  }
+  .quick-btn::after {
+    content: '';
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    width: 16px;
+    height: 1px;
+    background: var(--accent);
+    transform: translateY(-50%) scaleX(0.6);
+    transform-origin: right;
+    transition: transform 0.25s ease;
+  }
+  .quick-btn:hover {
+    background: var(--bg-card);
+    border-color: var(--primary);
+  }
+  .quick-btn:hover::after {
+    transform: translateY(-50%) scaleX(1);
+  }
+
+  /* ── Input Area ───────────────────────────────── */
+  .input-area {
+    padding: 20px 40px 32px;
+    border-top: 1px solid var(--border-soft);
+    display: flex;
+    gap: 10px;
+    background: var(--bg-card);
+    align-items: center;
+  }
+  .input-wrapper {
+    flex: 1;
+    position: relative;
+  }
+  .input-area input {
+    width: 100%;
+    padding: 15px 20px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    background: var(--bg-card);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .input-area input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(42, 24, 46, 0.07);
+  }
+  .input-area input::placeholder {
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .send-btn {
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 12px;
+    background: var(--primary);
+    color: #F6F2EC;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .send-btn:hover:not(:disabled) {
+    background: var(--primary-soft);
+    transform: translateY(-1px);
+  }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Preview Panel ─────────────────────────────── */
+  .preview-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    position: relative;
+  }
+
+  .preview-placeholder {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    text-align: center;
+  }
+  .preview-placeholder .illustration {
+    width: 140px;
+    height: 140px;
+    margin-bottom: 36px;
+    opacity: 0.35;
+  }
+  .preview-placeholder h2 {
+    font-family: var(--font-serif);
+    font-size: 1.75rem;
+    font-weight: 300;
+    color: var(--primary);
+    margin-bottom: 14px;
+    font-style: italic;
+    letter-spacing: -0.01em;
+  }
+  .preview-placeholder p {
+    color: var(--text-dim);
+    font-size: 0.92rem;
+    line-height: 1.65;
+    max-width: 360px;
+  }
+
+  /* ── Progress ──────────────────────────────────── */
+  .progress-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    z-index: 10;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .progress-overlay.active { display: flex; opacity: 1; }
+  .progress-content {
+    text-align: center;
+    max-width: 440px;
+  }
+  .progress-loader {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 36px;
+    position: relative;
+  }
+  .progress-loader::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+  }
+  .progress-loader::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid transparent;
+    border-top-color: var(--primary);
+    border-right-color: var(--primary);
+    animation: spin 1.4s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .progress-status {
+    font-family: var(--font-serif);
+    font-size: 1.45rem;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--primary);
+    margin-bottom: 10px;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+  .progress-sub {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 36px;
+    font-style: italic;
+    font-family: var(--font-serif);
+  }
+  .progress-bar {
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 0 auto 12px;
+    width: 300px;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--primary);
+    border-radius: 2px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .progress-pct {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .preview-panel iframe {
+    flex: 1;
+    border: none;
+    width: 100%;
+    display: none;
+    background: white;
+  }
+
+  /* ── Survey ────────────────────────────────────── */
+  .survey-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(31, 20, 25, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 20px;
+  }
+  .survey-overlay.hidden { display: none; }
+  .survey-card {
+    background: var(--bg-card);
+    border-radius: 24px;
+    padding: 52px 56px 44px;
+    max-width: 620px;
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    position: relative;
+  }
+  .survey-card::-webkit-scrollbar { width: 4px; }
+  .survey-card::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .survey-header {
+    margin-bottom: 40px;
+  }
+  .survey-card .eyebrow {
+    font-family: var(--font-serif);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    font-style: italic;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+  .survey-card h2 {
+    font-family: var(--font-serif);
+    font-size: 2.3rem;
+    font-weight: 300;
+    color: var(--primary);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+  }
+  .survey-card h2 em {
+    font-style: italic;
+    font-weight: 400;
+  }
+  .survey-sub {
+    color: var(--text-dim);
+    font-size: 0.96rem;
+    line-height: 1.6;
+    max-width: 480px;
+  }
+
+  .survey-section {
+    margin-bottom: 32px;
+  }
+  .survey-section label {
+    display: block;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: var(--primary);
+    margin-bottom: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+  .survey-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .survey-chip {
+    padding: 11px 20px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+    color: var(--text);
+    background: var(--bg-card);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .survey-chip:hover {
+    border-color: var(--primary);
+    background: var(--surface);
+  }
+  .survey-chip.selected {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: #F6F2EC;
+  }
+  .survey-chip .chip-icon {
+    font-size: 1.02rem;
+    line-height: 1;
+  }
+
+  .survey-input {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: var(--font-sans);
+    font-size: 0.92rem;
+    color: var(--text);
+    background: var(--bg-card);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .survey-input:focus {
+    border-color: var(--primary);
+  }
+  .survey-input::placeholder {
+    color: var(--text-muted);
+  }
+  .survey-row {
+    display: flex;
+    gap: 12px;
+  }
+  .survey-row .survey-field {
+    flex: 1;
+  }
+  .survey-field label {
+    display: block;
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: var(--primary);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+  }
+
+  .survey-submit {
+    width: 100%;
+    padding: 17px;
+    border: none;
+    border-radius: 12px;
+    margin-top: 16px;
+    background: var(--primary);
+    color: #F6F2EC;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.02em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .survey-submit:hover {
+    background: var(--primary-soft);
+    transform: translateY(-1px);
+  }
+  .survey-submit svg {
+    transition: transform 0.2s;
+  }
+  .survey-submit:hover svg {
+    transform: translateX(3px);
+  }
+
+  /* ── Mobile ────────────────────────────────────── */
+  @media (max-width: 960px) {
+    .header { padding: 18px 24px; }
+    .logo { font-size: 1.4rem; }
+    .header-right { gap: 14px; }
+    .main { flex-direction: column; }
+    .chat-panel {
+      width: 100%;
+      min-width: 0;
+      border-right: none;
+      border-bottom: 1px solid var(--border-soft);
+      flex: 1;
+    }
+    .messages { padding: 32px 24px 16px; }
+    .quick-starts { padding: 0 24px 16px; }
+    .input-area { padding: 18px 24px 24px; }
+    .typing { margin: 0 24px; }
+    .preview-panel { flex: 1; min-height: 320px; }
+    .survey-card { padding: 36px 28px 28px; border-radius: 20px; }
+    .survey-card h2 { font-size: 1.8rem; }
+    .empty-state h1 { font-size: 1.7rem; }
+    .progress-status { font-size: 1.2rem; }
+  }
+
+  @media (max-width: 520px) {
+    .header { padding: 14px 18px; }
+    .setting-group select { padding: 6px 24px 6px 10px; font-size: 0.78rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ─── Survey Overlay ───────────────────────────── -->
+<div class="survey-overlay hidden" id="surveyOverlay">
+  <div class="survey-card">
+    <div class="survey-header">
+      <div class="eyebrow" id="surveyEyebrow"></div>
+      <h2 id="surveyTitle"></h2>
+      <div class="survey-sub" id="surveySub"></div>
+    </div>
+
+    <div class="survey-section" data-field="required_fields" id="sectionRequired" style="display:none;">
+      <div class="survey-row">
+        <div class="survey-field" id="fieldDest" style="display:none;">
+          <label id="labelDest"></label>
+          <input type="text" class="survey-input" id="inputDest" placeholder="">
+        </div>
+        <div class="survey-field" id="fieldDays" style="display:none;">
+          <label id="labelDays"></label>
+          <input type="number" class="survey-input" id="inputDays" min="1" max="30" placeholder="">
+        </div>
+      </div>
+    </div>
+
+    <div class="survey-section" data-field="travel_style">
+      <label id="labelStyle"></label>
+      <div class="survey-options" id="optStyle"></div>
+    </div>
+
+    <div class="survey-section" data-field="budget_tier">
+      <label id="labelBudget"></label>
+      <div class="survey-options" id="optBudget"></div>
+    </div>
+
+    <div class="survey-section" data-field="interests">
+      <label id="labelInterest"></label>
+      <div class="survey-options" id="optInterest"></div>
+    </div>
+
+    <button class="survey-submit" id="surveySubmit" onclick="submitSurvey()">
+      <span id="surveySubmitText"></span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ─── Header ───────────────────────────────────── -->
+<div class="header">
+  <div class="logo"><span id="logo">Wander</span><span class="logo-dot"></span></div>
+  <div class="header-right">
+    <div class="setting-group">
+      <select id="langSelect" onchange="switchLang(this.value)">
+        <option value="en">English</option>
+        <option value="zh">中文</option>
+      </select>
+    </div>
+    <div class="setting-group">
+      <select id="currencySelect">
+        <option value="CAD">CAD</option>
+        <option value="USD">USD</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Main ─────────────────────────────────────── -->
+<div class="main">
+  <!-- Chat Panel -->
+  <div class="chat-panel">
+    <div class="messages" id="messages">
+      <div class="empty-state" id="emptyState">
+        <h1 id="emptyHeading"></h1>
+        <p id="emptySub"></p>
+      </div>
+    </div>
+    <div class="typing" id="typing">
+      <span></span><span></span><span></span>
+    </div>
+    <div class="quick-starts" id="quickStarts"></div>
+    <div class="input-area">
+      <div class="input-wrapper">
+        <input type="text" id="input" placeholder="" autocomplete="off">
+      </div>
+      <button class="send-btn" id="sendBtn" onclick="send()" aria-label="Send">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22L11 13L2 9L22 2Z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Preview Panel -->
+  <div class="preview-panel">
+    <div class="preview-placeholder" id="placeholder">
+      <svg class="illustration" viewBox="0 0 140 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="70" cy="70" r="58" stroke="#2A182E" stroke-width="1"/>
+        <ellipse cx="70" cy="70" rx="58" ry="22" stroke="#2A182E" stroke-width="1"/>
+        <ellipse cx="70" cy="70" rx="58" ry="44" stroke="#2A182E" stroke-width="1"/>
+        <ellipse cx="70" cy="70" rx="28" ry="58" stroke="#2A182E" stroke-width="1"/>
+        <line x1="12" y1="70" x2="128" y2="70" stroke="#2A182E" stroke-width="1"/>
+        <line x1="70" y1="12" x2="70" y2="128" stroke="#2A182E" stroke-width="1"/>
+        <circle cx="92" cy="48" r="2.5" fill="#C85A3C"/>
+      </svg>
+      <h2 id="previewTitle"></h2>
+      <p id="previewHint"></p>
+    </div>
+    <div class="progress-overlay" id="progressOverlay">
+      <div class="progress-content">
+        <div class="progress-loader"></div>
+        <div class="progress-status" id="progressStatus"></div>
+        <div class="progress-sub" id="progressSub"></div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-pct" id="progressPct">0%</div>
+      </div>
+    </div>
+    <iframe id="planFrame" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"></iframe>
+  </div>
+</div>
+
+<script>
+  // ── Survey Config ─────────────────────────────────
+  const SURVEY = {
+    zh: {
+      eyebrow: "开始之前",
+      title: "让我<em>了解你</em>",
+      sub: "花 10 秒告诉我你的旅行风格，我会为你量身打造这趟旅程。",
+      eyebrowPartial: "还差一点",
+      titlePartial: "再<em>确认几件</em>小事",
+      subPartial: "其他都从你的话里读到了，只剩这些——选完就出发。",
+      dest: "目的地",
+      destPlaceholder: "例如：东京、巴黎、曼谷",
+      days: "旅行天数",
+      daysPlaceholder: "例如：5",
+      style: "和谁一起",
+      budget: "预算档次",
+      pace: "旅行节奏",
+      interest: "感兴趣的（可多选）",
+      submit: "开启旅程",
+      styles:  [{v:"solo",t:"独自",i:"🧳"},{v:"couple",t:"情侣",i:"🤍"},{v:"family",t:"家庭",i:"🏡"},{v:"friends",t:"朋友",i:"✨"}],
+      budgets: [{v:"budget",t:"精打细算",i:""},{v:"comfort",t:"舒适",i:""},{v:"luxury",t:"奢华",i:""}],
+      interests:[{v:"food",t:"美食",i:"🍃"},{v:"culture",t:"文化历史",i:"📜"},{v:"nature",t:"自然",i:"🌿"},{v:"shopping",t:"购物",i:"🛍"},{v:"adventure",t:"冒险",i:"🏔"},{v:"instagrammable",t:"出片",i:"📷"}],
+    },
+    en: {
+      eyebrow: "Before we begin",
+      title: "Let me <em>know you</em>",
+      sub: "Take ten seconds to share your travel style — I'll craft this journey around you.",
+      eyebrowPartial: "Almost there",
+      titlePartial: "Just a <em>quick confirm</em>",
+      subPartial: "I picked up the rest from your message — choose these and we're off.",
+      dest: "Destination",
+      destPlaceholder: "e.g. Tokyo, Paris, Bangkok",
+      days: "Trip duration (days)",
+      daysPlaceholder: "e.g. 5",
+      style: "Traveling with",
+      budget: "Budget level",
+      interest: "What interests you (pick multiple)",
+      submit: "Begin the Journey",
+      styles:  [{v:"solo",t:"Solo",i:"🧳"},{v:"couple",t:"Couple",i:"🤍"},{v:"family",t:"Family",i:"🏡"},{v:"friends",t:"Friends",i:"✨"}],
+      budgets: [{v:"budget",t:"Mindful",i:""},{v:"comfort",t:"Comfort",i:""},{v:"luxury",t:"Luxury",i:""}],
+      interests:[{v:"food",t:"Food",i:"🍃"},{v:"culture",t:"Culture",i:"📜"},{v:"nature",t:"Nature",i:"🌿"},{v:"shopping",t:"Shopping",i:"🛍"},{v:"adventure",t:"Adventure",i:"🏔"},{v:"instagrammable",t:"Photo spots",i:"📷"}],
+    }
+  };
+
+  let surveyProfile = { travel_style: '', budget_tier: '', interests: [] };
+  // LLM 提取的画像（由 show_survey SSE 事件填充）
+  let _surveyExtracted = {};
+  let _surveyMissing = [];
+
+  function buildSurvey(lang) {
+    const s = SURVEY[lang];
+    document.getElementById('surveyEyebrow').textContent = s.eyebrow;
+    document.getElementById('surveyTitle').innerHTML = s.title;
+    document.getElementById('surveySub').textContent = s.sub;
+    document.getElementById('labelDest').textContent = s.dest;
+    document.getElementById('inputDest').placeholder = s.destPlaceholder;
+    document.getElementById('labelDays').textContent = s.days;
+    document.getElementById('inputDays').placeholder = s.daysPlaceholder;
+    document.getElementById('labelStyle').textContent = s.style;
+    document.getElementById('labelBudget').textContent = s.budget;
+    document.getElementById('labelInterest').textContent = s.interest;
+    document.getElementById('surveySubmitText').textContent = s.submit;
+
+    function renderChips(containerId, items, field, multi) {
+      const c = document.getElementById(containerId);
+      c.innerHTML = '';
+      items.forEach(function(item) {
+        const chip = document.createElement('div');
+        chip.className = 'survey-chip';
+        const iconSpan = item.i ? '<span class="chip-icon">' + item.i + '</span>' : '';
+        chip.innerHTML = iconSpan + item.t;
+        chip.onclick = function() {
+          if (multi) {
+            chip.classList.toggle('selected');
+            const idx = surveyProfile[field].indexOf(item.v);
+            if (idx >= 0) surveyProfile[field].splice(idx, 1);
+            else surveyProfile[field].push(item.v);
+          } else {
+            c.querySelectorAll('.survey-chip').forEach(function(el) { el.classList.remove('selected'); });
+            chip.classList.add('selected');
+            surveyProfile[field] = item.v;
+          }
+        };
+        c.appendChild(chip);
+      });
+    }
+
+    renderChips('optStyle', s.styles, 'travel_style', false);
+    renderChips('optBudget', s.budgets, 'budget_tier', false);
+    renderChips('optInterest', s.interests, 'interests', true);
+  }
+
+  async function submitSurvey() {
+    // 收集必填字段
+    const dest = document.getElementById('inputDest').value.trim() || (_surveyExtracted.destination || '');
+    const daysVal = document.getElementById('inputDays').value.trim();
+    const days = daysVal ? parseInt(daysVal, 10) : (_surveyExtracted.duration_days || null);
+
+    // 验证必填
+    if (!dest) {
+      document.getElementById('inputDest').focus();
+      return;
+    }
+    if (!days) {
+      document.getElementById('inputDays').focus();
+      return;
+    }
+
+    // 画像字段默认值
+    if (!surveyProfile.travel_style) surveyProfile.travel_style = _surveyExtracted.travel_style || 'friends';
+    if (!surveyProfile.budget_tier) surveyProfile.budget_tier = _surveyExtracted.budget_tier || 'comfort';
+    if (!surveyProfile.interests.length) {
+      surveyProfile.interests = (_surveyExtracted.interests && _surveyExtracted.interests.length)
+        ? _surveyExtracted.interests : ['food', 'culture'];
+    }
+
+    document.getElementById('surveyOverlay').classList.add('hidden');
+
+    const t = I18N[currentLang];
+    const currency = document.getElementById('currencySelect').value;
+
+    // 显示进度
+    quickStarts.style.display = 'none';
+    showProgress(10, t.thinking);
+    typingEl.classList.add('active');
+    sending = true;
+    sendBtn.disabled = true;
+
+    try {
+      const resp = await fetch('/api/survey', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          language: currentLang,
+          currency: currency,
+          destination: dest,
+          duration_days: days,
+          travel_style: surveyProfile.travel_style,
+          budget_tier: surveyProfile.budget_tier,
+          interests: surveyProfile.interests,
+        })
+      });
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let eventType = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            eventType = line.slice(7).trim();
+          } else if (line.startsWith('data: ') && eventType) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (eventType === 'progress') {
+                showProgress(data.pct, data.status);
+              } else if (eventType === 'plan_partial') {
+                handlePlanPartial(data.plan || {});
+              } else if (eventType === 'done') {
+                sessionId = data.session_id;
+                typingEl.classList.remove('active');
+                hideProgress();
+                addMessage('assistant', data.reply);
+                if (data.plan_html) {
+                  showPlan(data.plan_html);
+                }
+              }
+            } catch (e) {}
+            eventType = '';
+          }
+        }
+      }
+    } catch (err) {
+      addMessage('system', t.networkError);
+    } finally {
+      sending = false;
+      sendBtn.disabled = false;
+      typingEl.classList.remove('active');
+      hideProgress();
+    }
+  }
+
+  function openSurvey(missing, extracted) {
+    const s = SURVEY[currentLang];
+    _surveyExtracted = extracted || {};
+    _surveyMissing = missing || [];
+
+    // 重置 surveyProfile
+    surveyProfile = { travel_style: '', budget_tier: '', pace: '', interests: [] };
+
+    // 判断是否只差少量画像字段
+    const hasRequired = missing.indexOf('destination') < 0 && missing.indexOf('duration_days') < 0;
+    const profileMissing = missing.filter(function(f) { return f !== 'destination' && f !== 'duration_days'; });
+
+    if (hasRequired && profileMissing.length < 4) {
+      document.getElementById('surveyEyebrow').textContent = s.eyebrowPartial;
+      document.getElementById('surveyTitle').innerHTML = s.titlePartial;
+      document.getElementById('surveySub').textContent = s.subPartial;
+    } else {
+      document.getElementById('surveyEyebrow').textContent = s.eyebrow;
+      document.getElementById('surveyTitle').innerHTML = s.title;
+      document.getElementById('surveySub').textContent = s.sub;
+    }
+
+    // 必填字段区域
+    const needDest = missing.indexOf('destination') >= 0;
+    const needDays = missing.indexOf('duration_days') >= 0;
+    document.getElementById('sectionRequired').style.display = (needDest || needDays) ? '' : 'none';
+    document.getElementById('fieldDest').style.display = needDest ? '' : 'none';
+    document.getElementById('fieldDays').style.display = needDays ? '' : 'none';
+    // 清空输入
+    document.getElementById('inputDest').value = '';
+    document.getElementById('inputDays').value = '';
+
+    // 画像 chip section — 只展示缺失的
+    document.querySelectorAll('.survey-section[data-field]').forEach(function(el) {
+      const field = el.getAttribute('data-field');
+      if (field === 'required_fields') return; // 上面已处理
+      el.style.display = missing.indexOf(field) >= 0 ? '' : 'none';
+    });
+
+    // Pre-select extracted values as chip selections
+    if (extracted.travel_style && missing.indexOf('travel_style') >= 0) {
+      surveyProfile.travel_style = extracted.travel_style;
+      _preselectChip('optStyle', extracted.travel_style);
+    }
+    if (extracted.budget_tier && missing.indexOf('budget_tier') >= 0) {
+      surveyProfile.budget_tier = extracted.budget_tier;
+      _preselectChip('optBudget', extracted.budget_tier);
+    }
+    if (extracted.pace && missing.indexOf('pace') >= 0) {
+      surveyProfile.pace = extracted.pace;
+      _preselectChip('optPace', extracted.pace);
+    }
+
+    document.getElementById('surveyOverlay').classList.remove('hidden');
+  }
+
+  function _preselectChip(containerId, value) {
+    const chips = document.querySelectorAll('#' + containerId + ' .survey-chip');
+    chips.forEach(function(chip) {
+      // chip text contains the value in its data — match by checking rendered items
+      // We stored value in onclick; re-trigger by checking textContent won't work.
+      // Instead, we'll just visually mark it (the surveyProfile is already set above).
+    });
+  }
+
+  // ── i18n ─────────────────────────────────────────
+  const I18N = {
+    zh: {
+      logo: "Wander",
+      emptyHeading: "你下一段<em>旅程</em><br>会是什么模样？",
+      emptySub: "和我说说你的想法吧——哪怕只是一个模糊的念头。",
+      placeholder: "我想去……",
+      previewTitle: "旅程，即将展开",
+      previewHint: "你的完整行程会在这里徐徐铺开——地图、图片、视频与细节，一切都为你而备。",
+      viewPlan: "查看行程",
+      networkError: "网络似乎走神了，请再试一次",
+      thinking: "让我想一想……",
+      quickLabel: "或者试试看",
+      quickStarts: [
+        "从温哥华出发，和女朋友去东京 5 天，喜欢美食、动漫和购物，预算每人 $1500"
+      ],
+      progressSub: "正在为你编织这段旅程"
+    },
+    en: {
+      logo: "Wander",
+      emptyHeading: "Where will your<br><em>next journey</em> unfold?",
+      emptySub: "Tell me what you're dreaming of — even a rough idea is enough to begin.",
+      placeholder: "I'd love to visit…",
+      previewTitle: "Your journey awaits",
+      previewHint: "Your tailored itinerary will unfold here — maps, photos, videos, and every detail, crafted for you.",
+      viewPlan: "View journey",
+      networkError: "The connection drifted — let's try again",
+      thinking: "Reading your thoughts…",
+      quickLabel: "Or start with",
+      quickStarts: [
+        "From Vancouver to Tokyo with my girlfriend for 5 days. We love food, anime, and shopping. Budget $1500 each."
+      ],
+      progressSub: "Crafting your journey"
+    }
+  };
+
+  let currentLang = 'en';
+  let sessionId = null;
+  let sending = false;
+
+  const messagesEl = document.getElementById('messages');
+  const emptyStateEl = document.getElementById('emptyState');
+  const inputEl = document.getElementById('input');
+  const sendBtn = document.getElementById('sendBtn');
+  const typingEl = document.getElementById('typing');
+  const placeholderEl = document.getElementById('placeholder');
+  const planFrame = document.getElementById('planFrame');
+  const quickStarts = document.getElementById('quickStarts');
+
+  function applyLang(lang) {
+    currentLang = lang;
+    const t = I18N[lang];
+    document.getElementById('logo').textContent = t.logo;
+    document.getElementById('emptyHeading').innerHTML = t.emptyHeading;
+    document.getElementById('emptySub').textContent = t.emptySub;
+    inputEl.placeholder = t.placeholder;
+    document.getElementById('previewTitle').textContent = t.previewTitle;
+    document.getElementById('previewHint').textContent = t.previewHint;
+    document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN';
+
+    quickStarts.innerHTML = '';
+    var label = document.createElement('div');
+    label.className = 'quick-label';
+    label.textContent = t.quickLabel;
+    quickStarts.appendChild(label);
+    t.quickStarts.forEach(function(text) {
+      var btn = document.createElement('div');
+      btn.className = 'quick-btn';
+      btn.textContent = text;
+      btn.onclick = function() { sendQuick(btn); };
+      quickStarts.appendChild(btn);
+    });
+
+  }
+
+  function switchLang(lang) {
+    applyLang(lang);
+    buildSurvey(lang);
+
+    // 如果已有计划书，用新语言重新渲染
+    if (sessionId && planFrame.style.display === 'block') {
+      rerenderPlan(lang);
+    }
+  }
+
+  function rerenderPlan(lang) {
+    fetch('/api/rerender', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId, language: lang })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.plan_html) {
+        showPlan(d.plan_html);
+      }
+    })
+    .catch(function() {});
+  }
+
+
+  // Init
+  applyLang('en');
+  buildSurvey('en');
+
+  inputEl.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.isComposing) send();
+  });
+
+  function sendQuick(el) {
+    inputEl.value = el.textContent;
+    send();
+  }
+
+  function addMessage(role, text) {
+    const t = I18N[currentLang];
+    if (emptyStateEl && emptyStateEl.parentNode) {
+      emptyStateEl.style.display = 'none';
+    }
+
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.textContent = text;
+
+    if (role === 'assistant' && planFrame.style.display === 'block') {
+      const btn = document.createElement('button');
+      btn.className = 'view-plan-btn';
+      btn.innerHTML = t.viewPlan + ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+      btn.onclick = function() {
+        document.querySelector('.preview-panel').scrollIntoView({ behavior: 'smooth' });
+      };
+      div.appendChild(document.createElement('br'));
+      div.appendChild(btn);
+    }
+
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function showPlan(html) {
+    placeholderEl.style.display = 'none';
+    planFrame.style.display = 'block';
+    // 注入 sessionId 供 iframe 内的动态搜索使用
+    var inject = '<script>window._sessionId="' + (sessionId || '') + '";<\/script>';
+    planFrame.srcdoc = html.replace('</head>', inject + '</head>');
+  }
+
+  const progressOverlay = document.getElementById('progressOverlay');
+  const progressStatus = document.getElementById('progressStatus');
+  const progressSub = document.getElementById('progressSub');
+  const progressFill = document.getElementById('progressFill');
+  const progressPct = document.getElementById('progressPct');
+
+  let _progressShownAt = 0;
+  let _hideProgressTimer = null;
+
+  function showProgress(pct, status) {
+    const t = I18N[currentLang];
+    if (_hideProgressTimer) { clearTimeout(_hideProgressTimer); _hideProgressTimer = null; }
+    placeholderEl.style.display = 'none';
+    progressOverlay.style.display = 'flex';
+    // force reflow so opacity transition triggers
+    void progressOverlay.offsetHeight;
+    progressOverlay.classList.add('active');
+    progressFill.style.width = pct + '%';
+    progressStatus.textContent = status;
+    progressSub.textContent = t.progressSub;
+    progressPct.textContent = pct + '%';
+    if (!_progressShownAt) _progressShownAt = Date.now();
+  }
+
+  function hideProgress() {
+    if (_hideProgressTimer) { clearTimeout(_hideProgressTimer); _hideProgressTimer = null; }
+    if (!_progressShownAt) {
+      // not currently showing — just clean up
+      progressOverlay.classList.remove('active');
+      progressOverlay.style.display = '';
+      return;
+    }
+    const elapsed = Date.now() - _progressShownAt;
+    const minTime = 600;
+    if (elapsed < minTime) {
+      _hideProgressTimer = setTimeout(hideProgress, minTime - elapsed);
+      return;
+    }
+    _progressShownAt = 0;
+    progressOverlay.classList.remove('active');
+    // delay display:none until fade-out completes
+    setTimeout(function() {
+      if (!progressOverlay.classList.contains('active')) {
+        progressOverlay.style.display = '';
+        progressFill.style.width = '0%';
+        progressStatus.textContent = '';
+        progressSub.textContent = '';
+        progressPct.textContent = '0%';
+      }
+    }, 300);
+  }
+
+  // 根据流式进来的部分 plan dict 更新 loader 文案
+  function handlePlanPartial(plan) {
+    const t = I18N[currentLang];
+    placeholderEl.style.display = 'none';
+    progressOverlay.style.display = 'flex';
+    progressOverlay.classList.add('active');
+    if (!_progressShownAt) _progressShownAt = Date.now();
+
+    // 主状态: 优先用 title, 否则用 destination, 否则保留当前
+    if (plan.title) {
+      progressStatus.textContent = plan.title;
+    } else if (plan.destination) {
+      progressStatus.textContent = plan.destination;
+    }
+
+    // 副状态: 当前正在生成的天数和主题
+    const days = Array.isArray(plan.daily_plans) ? plan.daily_plans : [];
+    if (days.length > 0) {
+      const last = days[days.length - 1] || {};
+      const dayLabel = currentLang === 'zh'
+        ? `Day ${last.day || days.length}`
+        : `Day ${last.day || days.length}`;
+      const theme = last.theme ? ' · ' + last.theme : '';
+      const actCount = Array.isArray(last.activities) ? last.activities.length : 0;
+      const actLabel = actCount > 0
+        ? (currentLang === 'zh' ? ` · ${actCount} 个活动` : ` · ${actCount} activities`)
+        : '';
+      progressSub.textContent = dayLabel + theme + actLabel;
+    } else if (plan.overview) {
+      // 还没到 daily_plans 阶段，先显示 overview 的前几十字
+      progressSub.textContent = plan.overview.slice(0, 80);
+    }
+
+    // 进度条: 按 daily_plans 长度粗略推进 (50% → 70%)
+    if (days.length > 0) {
+      const pct = Math.min(70, 50 + days.length * 3);
+      progressFill.style.width = pct + '%';
+      progressPct.textContent = pct + '%';
+    }
+  }
+
+  async function send() {
+    const text = inputEl.value.trim();
+    if (!text || sending) return;
+
+    quickStarts.style.display = 'none';
+
+    addMessage('user', text);
+    inputEl.value = '';
+    sending = true;
+    sendBtn.disabled = true;
+    typingEl.classList.add('active');
+
+    const t = I18N[currentLang];
+    const currency = document.getElementById('currencySelect').value;
+
+    showProgress(5, t.thinking);
+
+    try {
+      const resp = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: sessionId,
+          message: text,
+          language: currentLang,
+          currency: currency,
+        })
+      });
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let eventType = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            eventType = line.slice(7).trim();
+          } else if (line.startsWith('data: ') && eventType) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (eventType === 'progress') {
+                showProgress(data.pct, data.status);
+              } else if (eventType === 'plan_partial') {
+                handlePlanPartial(data.plan || {});
+              } else if (eventType === 'show_survey') {
+                // LLM 判断需要弹问卷
+                hideProgress();
+                typingEl.classList.remove('active');
+                openSurvey(data.missing_fields || [], data.extracted || {});
+              } else if (eventType === 'done') {
+                sessionId = data.session_id;
+                typingEl.classList.remove('active');
+                hideProgress();
+                addMessage('assistant', data.reply);
+                if (data.plan_html) {
+                  showPlan(data.plan_html);
+                }
+              }
+            } catch (e) {}
+            eventType = '';
+          }
+        }
+      }
+    } catch (err) {
+      addMessage('system', t.networkError);
+    } finally {
+      sending = false;
+      sendBtn.disabled = false;
+      typingEl.classList.remove('active');
+      hideProgress();
+    }
+  }
+</script>
+</body>
+</html>

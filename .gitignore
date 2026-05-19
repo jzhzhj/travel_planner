@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+rag/chroma_db/
+.claude/
+travel_plan.html
+.DS_Store
