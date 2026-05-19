@@ -482,8 +482,8 @@ def suggest_more(req: SuggestRequest):
 def _suggest_via_places(
     destination: str, category: str, existing: set[str], lang: str,
 ) -> list[dict]:
-    """用 Google Places Text Search 获取真实推荐。"""
-    from tools.places import search_places
+    """用 Google Places Text Search 获取真实推荐（含图片 URL）。"""
+    from tools.places import search_places, get_photo_url
 
     lang_code = "zh" if lang == "zh" else "en"
     if category == "restaurants":
@@ -510,11 +510,15 @@ def _suggest_via_places(
             continue
         rating_info = f" ({p.rating}/5)" if p.rating else ""
         desc = p.editorial_summary or p.address or ""
+        photo_url = ""
+        if p.photo_name:
+            photo_url = get_photo_url(p.photo_name, max_width=400) or ""
         results.append({
             "name": p.display_name,
             "desc": f"{desc}{rating_info}",
             "lat": p.lat or 0,
             "lng": p.lng or 0,
+            "image": photo_url,
         })
         if len(results) >= 3:
             break

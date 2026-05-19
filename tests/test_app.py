@@ -30,8 +30,8 @@ class TestIsUserFacing:
 
 
 class TestSuggestViaPlaces:
-    def test_returns_lat_lng(self):
-        from unittest.mock import patch, MagicMock
+    def test_returns_lat_lng_and_image(self):
+        from unittest.mock import patch
         from tools.places import PlacePOI
 
         mock_pois = [
@@ -39,15 +39,34 @@ class TestSuggestViaPlaces:
                 name="id1", display_name="Test Spot", rating=4.5,
                 user_ratings_total=100, lat=47.6, lng=-122.3,
                 editorial_summary="Great place",
+                photo_name="places/id1/photos/abc",
             ),
         ]
-        with patch("tools.places.search_places", return_value=mock_pois):
+        with patch("tools.places.search_places", return_value=mock_pois), \
+             patch("tools.places.get_photo_url", return_value="https://photo.url/img.jpg"):
             from app import _suggest_via_places
             results = _suggest_via_places("Seattle", "activities", set(), "en")
             assert len(results) == 1
             assert results[0]["lat"] == 47.6
             assert results[0]["lng"] == -122.3
             assert results[0]["name"] == "Test Spot"
+            assert results[0]["image"] == "https://photo.url/img.jpg"
+
+    def test_no_photo_returns_empty_image(self):
+        from unittest.mock import patch
+        from tools.places import PlacePOI
+
+        mock_pois = [
+            PlacePOI(
+                name="id2", display_name="No Photo Place", rating=4.0,
+                user_ratings_total=50, lat=35.0, lng=139.0,
+            ),
+        ]
+        with patch("tools.places.search_places", return_value=mock_pois):
+            from app import _suggest_via_places
+            results = _suggest_via_places("Tokyo", "activities", set(), "en")
+            assert len(results) == 1
+            assert results[0]["image"] == ""
 
 
 class TestSse:

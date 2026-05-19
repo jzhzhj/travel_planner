@@ -1263,7 +1263,7 @@ HTML_TEMPLATE = """\
   }}
 
   // 创建 held-card 元素
-  function createHeldCard(name, activityEl, desc, lat, lng) {{
+  function createHeldCard(name, activityEl, desc, lat, lng, imageUrl) {{
     var hc = document.createElement('div');
     hc.className = 'held-card';
     hc.draggable = true;
@@ -1274,6 +1274,7 @@ HTML_TEMPLATE = """\
     hc._activityEl = activityEl || null;
     hc._lat = lat || 0;
     hc._lng = lng || 0;
+    hc._imageUrl = imageUrl || '';
 
     // 拖拽回行程
     hc.addEventListener('dragstart', function(e) {{
@@ -1284,7 +1285,7 @@ HTML_TEMPLATE = """\
         hc._activityEl = createActivityCard(
           heldName ? heldName.textContent.trim() : 'Activity',
           heldDesc ? heldDesc.textContent.trim() : '',
-          hc._lat, hc._lng
+          hc._lat, hc._lng, hc._imageUrl
         );
       }} else if (hc._activityEl && !hc._activityEl.getAttribute('data-lat')) {{
         // 从计划中拖出的卡片保留坐标
@@ -1349,13 +1350,15 @@ HTML_TEMPLATE = """\
       var actDesc = descEl ? descEl.textContent.trim() : '';
       var origLat = parseFloat(dragSrc.getAttribute('data-lat')) || 0;
       var origLng = parseFloat(dragSrc.getAttribute('data-lng')) || 0;
+      var origImg = dragSrc.querySelector('.activity-img img');
+      var origImageUrl = origImg ? origImg.getAttribute('src') : '';
       var origActivity = dragSrc;
       origActivity.remove();
       if (holdEl.classList.contains('empty')) {{
         holdEl.innerHTML = '';
         holdEl.classList.remove('empty');
       }}
-      holdEl.appendChild(createHeldCard(actName, origActivity, actDesc, origLat, origLng));
+      holdEl.appendChild(createHeldCard(actName, origActivity, actDesc, origLat, origLng, origImageUrl));
       updateHoldEmpty();
       refreshState();
       if (srcDayCard && window._recalcFreeTime) window._recalcFreeTime(srcDayCard);
@@ -1381,7 +1384,7 @@ HTML_TEMPLATE = """\
   }}
   if (panelCancel) panelCancel.addEventListener('click', closeAddForm);
   // 创建一个新的 activity 卡片 DOM 元素
-  function createActivityCard(name, desc, lat, lng) {{
+  function createActivityCard(name, desc, lat, lng, imageUrl) {{
     var card = document.createElement('div');
     card.className = 'activity';
     card.draggable = true;
@@ -1392,9 +1395,12 @@ HTML_TEMPLATE = """\
     card.setAttribute('data-lng', (lng && lng !== 0) ? String(lng) : '');
     card.setAttribute('data-place-name', name || '');
     var dragLabel = isZh ? '拖动排序' : 'Drag';
+    var imgInner = imageUrl
+      ? '<img src="' + imageUrl + '" alt="' + name + '">'
+      : '<span>' + (isZh ? '暂无图片' : 'No image') + '</span>';
     card.innerHTML =
       '<div class="drag-handle" title="' + dragLabel + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/></svg>' + dragLabel + '</div>' +
-      '<div class="activity-img"><span>' + (isZh ? '暂无图片' : 'No image') + '</span></div>' +
+      '<div class="activity-img">' + imgInner + '</div>' +
       '<div class="activity-body">' +
         '<h3>' + name + '</h3>' +
         (desc ? '<div class="desc">' + desc + '</div>' : '<div class="desc"></div>') +
@@ -1502,7 +1508,7 @@ HTML_TEMPLATE = """\
             holdEl.innerHTML = '';
             holdEl.classList.remove('empty');
           }}
-          if (holdEl) holdEl.appendChild(createHeldCard(name, null, item.desc || '', item.lat || 0, item.lng || 0));
+          if (holdEl) holdEl.appendChild(createHeldCard(name, null, item.desc || '', item.lat || 0, item.lng || 0, item.image || ''));
         }});
         updateHoldEmpty();
       }})

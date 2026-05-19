@@ -96,19 +96,18 @@ class TestRenderPlan:
         # At least: global assignment + multiple drop handlers
         assert count >= 5
 
-    def test_create_activity_card_has_lat_lng_params(self, minimal_plan):
-        """createActivityCard should accept lat/lng params and set data attributes."""
+    def test_create_activity_card_has_lat_lng_image_params(self, minimal_plan):
+        """createActivityCard should accept lat/lng/imageUrl params."""
         html = render_plan(minimal_plan, {})
-        assert "function createActivityCard(name, desc, lat, lng)" in html
-        assert "data-lat" in html
-        assert "data-lng" in html
+        assert "function createActivityCard(name, desc, lat, lng, imageUrl)" in html
 
-    def test_create_held_card_has_lat_lng_params(self, minimal_plan):
-        """createHeldCard should accept and store lat/lng."""
+    def test_create_held_card_has_lat_lng_image_params(self, minimal_plan):
+        """createHeldCard should accept and store lat/lng/imageUrl."""
         html = render_plan(minimal_plan, {})
-        assert "function createHeldCard(name, activityEl, desc, lat, lng)" in html
+        assert "function createHeldCard(name, activityEl, desc, lat, lng, imageUrl)" in html
         assert "hc._lat" in html
         assert "hc._lng" in html
+        assert "hc._imageUrl" in html
 
     def test_per_zone_transit_recalc(self, minimal_plan):
         """recalcTransit should iterate per zone, not across all zones."""
