@@ -132,9 +132,12 @@ def search_destination_pois(
     *,
     language: str = "en",
     num_attractions: int = 15,
-    num_restaurants: int = 8,
+    num_restaurants: int = 10,
 ) -> dict[str, list[PlacePOI]]:
     """Search for top attractions and restaurants in a destination.
+
+    Restaurants use multiple targeted queries (breakfast, local cuisine, dinner)
+    to get diverse, high-quality results instead of one generic query.
 
     Returns:
         {"attractions": [...], "restaurants": [...]}
@@ -147,23 +150,46 @@ def search_destination_pois(
 
     if lang_code == "zh":
         attr_query = f"{destination} 必去景点 热门旅游景点"
-        rest_query = f"{destination} 当地特色餐厅 美食推荐"
+        rest_queries = [
+            (f"{destination} 当地特色美食 必吃餐厅", 5),
+            (f"{destination} 早餐 早午餐 人气店", 3),
+            (f"{destination} 晚餐 高评分餐厅 推荐", 4),
+        ]
     else:
         attr_query = f"top tourist attractions in {destination}"
-        rest_query = f"best local restaurants in {destination}"
+        rest_queries = [
+            (f"best local cuisine restaurants in {destination}", 5),
+            (f"popular breakfast brunch spots in {destination}", 3),
+            (f"top rated dinner restaurants in {destination}", 4),
+        ]
 
     import concurrent.futures
-    with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
         attr_future = pool.submit(
             search_places, attr_query,
             max_results=num_attractions, language=lang_code,
         )
-        rest_future = pool.submit(
-            search_places, rest_query,
-            max_results=num_restaurants, language=lang_code,
-        )
+        rest_futures = [
+            pool.submit(search_places, q, max_results=n, language=lang_code)
+            for q, n in rest_queries
+        ]
+
         attractions = attr_future.result(timeout=15)
-        restaurants = rest_future.result(timeout=15)
+
+        # Merge restaurant results, deduplicate by display_name
+        seen_names: set[str] = set()
+        restaurants: list[PlacePOI] = []
+        for fut in rest_futures:
+            try:
+                for poi in fut.result(timeout=15):
+                    if poi.display_name.lower() not in seen_names:
+                        seen_names.add(poi.display_name.lower())
+                        restaurants.append(poi)
+            except Exception:
+                pass
+        # Sort by rating (best first), cap at num_restaurants
+        restaurants.sort(key=lambda p: (-p.rating, -p.user_ratings_total))
+        restaurants = restaurants[:num_restaurants]
 
     log.info(
         f"[places] destination={destination}: "

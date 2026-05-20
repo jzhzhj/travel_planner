@@ -112,6 +112,8 @@ class State(TypedDict):
     check_result: str   # "generate" | "continue"
     # initial_intake 结果
     intake_result: str | None  # "show_survey" | "proceed_to_plan" | None
+    # Google Places POI 数据（generate_plan 时拉取，enrich_plan 校验用）
+    google_pois: dict | None
     # 富化数据缓存
     enrich_places: dict | None
     enrich_links: dict | None
@@ -691,6 +693,8 @@ def _build_plan_messages(state: State) -> list[BaseMessage]:
             if pois_text:
                 result.append(HumanMessage(content=pois_text))
                 log.info(f"[build_plan_messages] injected Google Places POIs for {destination}")
+            # 存入 state 供 enrich_plan 后验校验
+            state["google_pois"] = pois
         except Exception as e:
             log.warning(f"[build_plan_messages] Places POI fetch failed: {e}")
 
@@ -949,6 +953,92 @@ def generate_plan(state: State) -> State:
     }
 
 
+def _validate_plan_places(
+    plan: TravelPlan,
+    google_pois: dict[str, list] | None,
+    lang: str,
+) -> TravelPlan:
+    """Post-validate: check each activity's place_name exists via Google Places.
+
+    If a place was NOT in the pre-fetched POI list, do a quick search to verify
+    it actually exists. If it doesn't, replace with the best-rated unused POI
+    from the list.
+    """
+    if not google_pois:
+        return plan
+
+    from tools.places import search_places, PlacePOI
+
+    # Build set of known-good names from Google Places results
+    known_names: set[str] = set()
+    all_pois: list[PlacePOI] = []
+    for category in ("attractions", "restaurants"):
+        for poi in google_pois.get(category, []):
+            known_names.add(poi.display_name.lower())
+            all_pois.append(poi)
+
+    # Track names already used in plan
+    used_names = {
+        act.place_name.lower()
+        for day in plan.daily_plans
+        for act in day.activities
+    }
+
+    replacements_made = 0
+    for day in plan.daily_plans:
+        for act in day.activities:
+            name_lower = act.place_name.lower()
+            if name_lower in known_names:
+                continue  # Already a verified Google Places result
+
+            # Not in our pre-fetched list — verify it exists via quick search
+            try:
+                results = search_places(act.place_name, max_results=1, language="en")
+                if results and results[0].display_name.lower() != name_lower:
+                    # Search returned a different name — use the corrected name
+                    log.info(
+                        f"[place_validate] correcting '{act.place_name}' → "
+                        f"'{results[0].display_name}'"
+                    )
+                    act.place_name = results[0].display_name
+                    replacements_made += 1
+                elif results:
+                    # Found with same name — it's real, keep it
+                    pass
+                else:
+                    # Not found at all — replace with best unused POI
+                    is_rest = getattr(act, "is_restaurant", False)
+                    category = "restaurants" if is_rest else "attractions"
+                    replacement = _pick_unused_poi(
+                        google_pois.get(category, []), used_names
+                    )
+                    if replacement:
+                        log.warning(
+                            f"[place_validate] '{act.place_name}' not found, "
+                            f"replacing with '{replacement.display_name}'"
+                        )
+                        act.place_name = replacement.display_name
+                        if replacement.editorial_summary:
+                            act.description = replacement.editorial_summary
+                        used_names.add(replacement.display_name.lower())
+                        replacements_made += 1
+            except Exception as e:
+                log.warning(f"[place_validate] verification failed for '{act.place_name}': {e}")
+
+            used_names.add(act.place_name.lower())
+
+    log.info(f"[place_validate] {replacements_made} corrections made")
+    return plan
+
+
+def _pick_unused_poi(pois: list, used_names: set[str]):
+    """Pick the highest-rated POI not already used in the plan."""
+    for poi in sorted(pois, key=lambda p: (-p.rating, -p.user_ratings_total)):
+        if poi.display_name.lower() not in used_names:
+            return poi
+    return None
+
+
 MAX_DISTANCE_KM = 80  # 景点距目的地中心最大允许距离（km）
 
 
@@ -1114,6 +1204,11 @@ def enrich_plan(state: State) -> State:
                 places[name] = PlaceInfo(name=name, summary="", image_url="", lat=0, lon=0)
                 log.warning(f"[enrich_plan]   wiki FAIL: {name} — {type(e).__name__}: {e}")
         log.info(f"[enrich_plan] wikipedia done in {time.time()-t1:.1f}s")
+
+        # ── 景点真实性校验：检查 LLM 生成的景点是否真实存在 ──
+        _progress(74, "校验景点信息..." if lang == "zh" else "Validating places...")
+        google_pois = state.get("google_pois")
+        plan = _validate_plan_places(plan, google_pois, lang)
 
         # ── 距离校验：检查是否有景点离目的地过远 ──
         _progress(75, "校验景点距离..." if lang == "zh" else "Validating place distances...")

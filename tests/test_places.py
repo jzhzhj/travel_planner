@@ -89,6 +89,42 @@ class TestFormatPoisForPrompt:
         assert "Restaurants" in result
 
 
+class TestSearchDestinationPois:
+    @patch.dict("os.environ", {"GOOGLE_MAPS_API_KEY": ""})
+    def test_no_api_key(self):
+        from tools.places import search_destination_pois
+        result = search_destination_pois("Tokyo")
+        assert result == {"attractions": [], "restaurants": []}
+
+    @patch("tools.places.search_places")
+    @patch.dict("os.environ", {"GOOGLE_MAPS_API_KEY": "fake-key"})
+    def test_restaurant_deduplication(self, mock_search):
+        from tools.places import search_destination_pois
+        # Simulate overlapping results from multiple queries
+        poi_a = PlacePOI(name="a", display_name="Sushi Place", rating=4.5, user_ratings_total=100)
+        poi_b = PlacePOI(name="b", display_name="Ramen Shop", rating=4.8, user_ratings_total=200)
+        poi_a_dup = PlacePOI(name="a2", display_name="Sushi Place", rating=4.5, user_ratings_total=100)
+
+        def side_effect(query, **kwargs):
+            if "attraction" in query.lower():
+                return [PlacePOI(name="t", display_name="Tower", rating=4.0)]
+            elif "breakfast" in query.lower():
+                return [poi_a]
+            elif "dinner" in query.lower():
+                return [poi_a_dup, poi_b]
+            else:
+                return [poi_a, poi_b]
+
+        mock_search.side_effect = side_effect
+        result = search_destination_pois("Tokyo", language="en")
+        rest_names = [r.display_name for r in result["restaurants"]]
+        # Should deduplicate — "Sushi Place" only once
+        assert rest_names.count("Sushi Place") == 1
+        assert "Ramen Shop" in rest_names
+        # Should be sorted by rating (Ramen 4.8 first)
+        assert result["restaurants"][0].display_name == "Ramen Shop"
+
+
 class TestSearchPlaces:
     @patch.dict("os.environ", {"GOOGLE_MAPS_API_KEY": ""})
     def test_no_api_key_returns_empty(self):
