@@ -49,7 +49,7 @@ from tools import ALL_TOOLS
 from tools.embeds import search_embeds_batch
 from tools.links import search_videos_batch
 from tools.directions import TransitInfo, get_day_transits, _haversine_meters
-from tools.places import search_destination_pois, format_pois_for_prompt
+from tools.places import search_destination_pois, format_pois_for_prompt, search_nearby_restaurants, get_photo_url as places_get_photo_url
 from tools.travel_api import TravelDeals, fetch_travel_deals
 from wiki import PlaceInfo, fetch_place_info
 
@@ -1039,6 +1039,105 @@ def _pick_unused_poi(pois: list, used_names: set[str]):
     return None
 
 
+def _replace_restaurants_with_nearby(
+    plan: TravelPlan,
+    places: dict[str, PlaceInfo],
+    lang: str,
+) -> tuple[TravelPlan, dict[str, PlaceInfo]]:
+    """Replace LLM-generated restaurants with real nearby restaurants from Google Places.
+
+    For each day:
+    1. Compute centroid of non-restaurant activities (using coordinates)
+    2. Search Google Places Nearby for restaurants around that centroid
+    3. Replace each restaurant activity with the best nearby match
+
+    Returns updated (plan, places) — places dict gets new entries for new restaurants.
+    """
+    import concurrent.futures
+    from tools.places import PlacePOI
+
+    used_names: set[str] = set()  # track globally to avoid duplicates across days
+    lang_code = "zh" if lang == "zh" else "en"
+    replaced = 0
+
+    for day in plan.daily_plans:
+        # Collect coordinates of non-restaurant activities
+        coords = []
+        for act in day.activities:
+            if getattr(act, "is_restaurant", False):
+                continue
+            pi = places.get(act.place_name)
+            if pi and pi.lat and pi.lon:
+                coords.append((pi.lat, pi.lon))
+
+        if not coords:
+            continue
+
+        # Centroid of the day's attractions
+        center_lat = sum(c[0] for c in coords) / len(coords)
+        center_lng = sum(c[1] for c in coords) / len(coords)
+
+        # Search for nearby restaurants around the centroid
+        try:
+            nearby = search_nearby_restaurants(
+                center_lat, center_lng,
+                radius_m=2000, max_results=10, language=lang_code,
+            )
+        except Exception as e:
+            log.warning(f"[restaurant_replace] nearby search failed for day {day.day}: {e}")
+            continue
+
+        if not nearby:
+            continue
+
+        # Replace each restaurant activity with a real nearby one
+        for act in day.activities:
+            if not getattr(act, "is_restaurant", False):
+                continue
+
+            # Pick highest-rated unused restaurant
+            picked = None
+            for poi in nearby:
+                if poi.display_name.lower() not in used_names:
+                    picked = poi
+                    break
+
+            if not picked:
+                continue
+
+            old_name = act.place_name
+            act.place_name = picked.display_name
+            act.description = picked.editorial_summary or act.description
+            if picked.address:
+                act.description += f" ({picked.address})"
+            act.food_recommendation = ""  # will be empty — real data doesn't have this
+
+            used_names.add(picked.display_name.lower())
+
+            # Add to places dict so enrich_plan can use coordinates/photos
+            places[picked.display_name] = PlaceInfo(
+                name=picked.display_name,
+                summary=picked.editorial_summary or "",
+                image_url=None,  # photo fetched separately in enrich
+                lat=picked.lat,
+                lon=picked.lng,
+            )
+
+            replaced += 1
+            log.info(
+                f"[restaurant_replace] day {day.day}: '{old_name}' → "
+                f"'{picked.display_name}' ({picked.rating}/5, "
+                f"{picked.user_ratings_total} reviews)"
+            )
+
+        # Add used restaurant names from this day for dedup
+        for act in day.activities:
+            used_names.add(act.place_name.lower())
+
+    log.info(f"[restaurant_replace] replaced {replaced} restaurants with nearby real ones")
+    return plan, places
+
+
 MAX_DISTANCE_KM = 80  # 景点距目的地中心最大允许距离（km）
 
 
@@ -1225,6 +1324,22 @@ def enrich_plan(state: State) -> State:
                 except Exception as e:
                     places[name] = PlaceInfo(name=name, summary="", image_url=None)
                     log.warning(f"[enrich_plan]   replacement wiki FAIL: {name} — {e}")
+
+        # ── 餐厅替换：用 Nearby Search 找每天景点附近的真实高分餐厅 ──
+        _progress(76, "匹配附近餐厅..." if lang == "zh" else "Finding nearby restaurants...")
+        plan, places = _replace_restaurants_with_nearby(plan, places, lang)
+
+        # 为新替换的餐厅补充 place info（图片等）
+        new_restaurant_names = {
+            act.place_name for day in plan.daily_plans for act in day.activities
+            if act.place_name not in place_futures
+        }
+        for rname in new_restaurant_names:
+            if rname not in places or not places[rname].image_url:
+                try:
+                    places[rname] = fetch_place_info(rname, language=lang)
+                except Exception:
+                    pass
 
         _progress(78, "搜索推荐视频..." if lang == "zh" else "Searching videos...")
 

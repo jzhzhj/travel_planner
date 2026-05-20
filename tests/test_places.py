@@ -125,6 +125,42 @@ class TestSearchDestinationPois:
         assert result["restaurants"][0].display_name == "Ramen Shop"
 
 
+class TestSearchNearbyRestaurants:
+    @patch.dict("os.environ", {"GOOGLE_MAPS_API_KEY": ""})
+    def test_no_api_key_returns_empty(self):
+        from tools.places import search_nearby_restaurants
+        result = search_nearby_restaurants(35.6762, 139.6503)
+        assert result == []
+
+    @patch("tools.places.httpx.post")
+    @patch.dict("os.environ", {"GOOGLE_MAPS_API_KEY": "fake-key"})
+    def test_successful_nearby_search(self, mock_post):
+        from tools.places import search_nearby_restaurants
+        mock_resp = MagicMock()
+        mock_resp.raise_for_status = MagicMock()
+        mock_resp.json.return_value = {"places": [SAMPLE_PLACE_RESPONSE]}
+        mock_post.return_value = mock_resp
+
+        results = search_nearby_restaurants(35.6762, 139.6503, radius_m=1000)
+        assert len(results) == 1
+        assert results[0].display_name == "Tokyo Tower"
+        # Verify request body has correct structure
+        call_body = mock_post.call_args[1]["json"]
+        assert call_body["includedTypes"] == ["restaurant"]
+        assert "locationRestriction" in call_body
+        circle = call_body["locationRestriction"]["circle"]
+        assert circle["center"]["latitude"] == 35.6762
+        assert circle["radius"] == 1000.0
+
+    @patch("tools.places.httpx.post")
+    @patch.dict("os.environ", {"GOOGLE_MAPS_API_KEY": "fake-key"})
+    def test_api_error_returns_empty(self, mock_post):
+        from tools.places import search_nearby_restaurants
+        mock_post.side_effect = Exception("Connection error")
+        results = search_nearby_restaurants(35.6762, 139.6503)
+        assert results == []
+
+
 class TestSearchPlaces:
     @patch.dict("os.environ", {"GOOGLE_MAPS_API_KEY": ""})
     def test_no_api_key_returns_empty(self):

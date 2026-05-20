@@ -105,6 +105,57 @@ def search_places(
         return []
 
 
+def search_nearby_restaurants(
+    lat: float,
+    lng: float,
+    *,
+    radius_m: int = 1500,
+    max_results: int = 5,
+    language: str = "en",
+) -> list[PlacePOI]:
+    """Nearby Search for restaurants around a coordinate.
+
+    Uses Google Places API (New) Nearby Search endpoint.
+    """
+    key = _api_key()
+    if not key:
+        return []
+
+    headers = {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": key,
+        "X-Goog-FieldMask": (
+            "places.id,places.displayName,places.rating,places.userRatingCount,"
+            "places.location,places.formattedAddress,places.types,"
+            "places.priceLevel,places.photos,places.editorialSummary"
+        ),
+    }
+    body = {
+        "includedTypes": ["restaurant"],
+        "maxResultCount": min(max_results, 20),
+        "locationRestriction": {
+            "circle": {
+                "center": {"latitude": lat, "longitude": lng},
+                "radius": float(radius_m),
+            }
+        },
+        "rankPreference": "POPULARITY",
+        "languageCode": language,
+    }
+
+    try:
+        resp = httpx.post(_NEARBY_SEARCH_URL, json=body, headers=headers, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+        places = data.get("places", [])
+        results = [_parse_place(p) for p in places]
+        log.info(f"[places] nearby({lat:.4f},{lng:.4f}, r={radius_m}m) → {len(results)} restaurants")
+        return results
+    except Exception as e:
+        log.warning(f"[places] nearby search error: {type(e).__name__}: {e}")
+        return []
+
+
 def get_photo_url(photo_name: str, max_width: int = 800) -> str | None:
     """Get a photo URL from Google Places photo resource name.
 
